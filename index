@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>dcamp Family VC League Map – Domain Coverage</title>
+  <style>
+    :root {
+      --bg:#050505;
+      --panel:#0f0f10;
+      --panel-2:#101011;
+      --line:rgba(255,255,255,.10);
+      --line-strong:rgba(255,255,255,.18);
+      --text:#F5F4EF;
+      --muted:#9C9B95;
+      --muted-2:#6F6E69;
+      --orange:#FF5E27;
+      --orange-soft:rgba(255,94,39,.14);
+      --shadow:0 24px 80px rgba(0,0,0,.36);
+      --radius:28px;
+    }
+    * { box-sizing:border-box; }
+    html, body { height:100%; }
+    body {
+      margin:0;
+      color:var(--text);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(80vw 80vw at 110% -10%, rgba(255,94,39,.13), transparent 36%),
+        linear-gradient(180deg, #050505 0%, #090909 100%);
+      letter-spacing:-0.01em;
+    }
+    a { color:inherit; text-decoration:none; }
+    .shell {
+      width:min(1280px, calc(100% - 48px));
+      margin:0 auto;
+      padding:26px 0 28px;
+    }
+    .topbar {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:20px;
+      margin-bottom:34px;
+    }
+    .brand-link {
+      font-size:14px;
+      color:var(--muted);
+      letter-spacing:.02em;
+    }
+    .nav {
+      display:flex;
+      align-items:center;
+      gap:18px;
+      font-size:14px;
+      color:var(--muted);
+    }
+    .nav a.active {
+      color:var(--text);
+    }
+    .title-wrap {
+      margin-bottom:20px;
+    }
+    .title-wrap h1 {
+      margin:0 0 8px;
+      font-size:clamp(34px, 5vw, 64px);
+      line-height:1;
+      font-weight:750;
+      letter-spacing:-0.04em;
+    }
+    .title-wrap p {
+      margin:0;
+      font-size:16px;
+      color:var(--muted);
+    }
+    .canvas {
+      position:relative;
+      min-height:820px;
+      border-radius:var(--radius);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,.01)),
+        var(--panel);
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .canvas::before {
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px);
+      background-size:36px 36px;
+      mask-image:linear-gradient(180deg, rgba(0,0,0,.38), transparent 92%);
+      pointer-events:none;
+    }
+    .chart-stage {
+      position:relative;
+      width:100%;
+      min-height:820px;
+    }
+    .svg-wrap {
+      position:absolute;
+      inset:0;
+    }
+    .raw-grid {
+      display:grid;
+      grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+      gap:18px;
+      margin-top:18px;
+      align-items:start;
+    }
+    .table-panel {
+      border-radius:24px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.018), rgba(255,255,255,.008)),
+        var(--panel-2);
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      min-width:0;
+    }
+    .table-head {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:18px 20px 14px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .table-head h2 {
+      margin:0;
+      font-size:15px;
+      font-weight:650;
+      letter-spacing:-0.01em;
+    }
+    .table-wrap {
+      overflow:visible;
+    }
+    table {
+      width:100%;
+      border-collapse:collapse;
+      table-layout:fixed;
+    }
+    thead th {
+      background:rgba(16,16,17,.96);
+      color:var(--muted);
+      font-size:12px;
+      font-weight:550;
+      text-align:left;
+      padding:12px 20px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    tbody tr {
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    tbody tr:last-child {
+      border-bottom:none;
+    }
+    tbody td {
+      padding:13px 20px;
+      vertical-align:top;
+      font-size:13px;
+      color:rgba(245,244,239,.92);
+    }
+    tbody tr:nth-child(odd) td {
+      background:rgba(255,255,255,.012);
+    }
+    tbody td.value {
+      text-align:right;
+      white-space:nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+    tbody td.stage-cell {
+      text-align:center;
+    }
+    .name-block {
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-width:0;
+    }
+    .name-block strong {
+      font-size:13px;
+      font-weight:620;
+      color:var(--text);
+      line-height:1.45;
+      word-break:keep-all;
+    }
+    .name-block span {
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.4;
+    }
+    .domain-cell {
+      color:rgba(245,244,239,.78);
+      line-height:1.5;
+      word-break:keep-all;
+    }
+    .stage-pill {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:56px;
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:650;
+      letter-spacing:.02em;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.04);
+    }
+    .stage-red {
+      color:#FF7A57;
+      border-color:rgba(255,122,87,.30);
+      background:rgba(255,122,87,.08);
+    }
+    .stage-green {
+      color:#92D98A;
+      border-color:rgba(146,217,138,.28);
+      background:rgba(146,217,138,.08);
+    }
+    .stage-blue {
+      color:#7EA9FF;
+      border-color:rgba(126,169,255,.28);
+      background:rgba(126,169,255,.08);
+    }
+    .table-note {
+      padding:14px 20px 18px;
+      border-top:1px solid rgba(255,255,255,.06);
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.5;
+    }
+    .tooltip {
+      position:fixed;
+      z-index:12;
+      min-width:198px;
+      max-width:260px;
+      padding:12px 12px 11px;
+      border-radius:16px;
+      background:rgba(12,12,12,.96);
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow:0 16px 48px rgba(0,0,0,.38);
+      color:var(--text);
+      pointer-events:none;
+      opacity:0;
+      transform:translate(-50%, calc(-100% - 14px));
+      transition:opacity .12s ease;
+      backdrop-filter:blur(8px);
+    }
+    .tooltip.visible { opacity:1; }
+    .tooltip .t-title {
+      font-size:13px;
+      font-weight:700;
+      margin-bottom:6px;
+    }
+    .tooltip .t-note {
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+      margin-bottom:6px;
+    }
+    .tooltip .t-row {
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.5;
+    }
+    .tooltip .t-row strong {
+      color:var(--text);
+      font-weight:650;
+    }
+    svg text {
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    @media (max-width: 1100px) {
+      .raw-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 960px) {
+      .shell {
+        width:min(100%, calc(100% - 24px));
+        padding-top:18px;
+      }
+      .topbar {
+        margin-bottom:24px;
+      }
+      .nav {
+        gap:12px;
+        font-size:13px;
+      }
+      .canvas, .chart-stage {
+        min-height:760px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="topbar">
+      <a class="brand-link" href="#">Investment Portfolio Map</a>
+      <div class="nav">
+        <a href="#">Portfolio</a>
+        <a href="#">AI</a>
+        <a href="#" class="active">RGB</a>
+        <a href="#">Admin</a>
+      </div>
+    </div>
+
+    <div class="title-wrap">
+      <h1>Family VC League Map</h1>
+      <p>Domain Coverage · dcamp Family VC Portfolio · as of 2026.03.31</p>
+    </div>
+
+    <section class="canvas">
+      <div class="chart-stage">
+        <div class="svg-wrap" id="coverage-root"></div>
+      </div>
+    </section>
+
+    <section class="raw-grid">
+      <article class="table-panel">
+        <div class="table-head">
+          <h2>운용사_펀드</h2>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:42%">펀드명</th>
+                <th style="width:14%; text-align:center;">투자단계</th>
+                <th style="width:28%">도메인</th>
+                <th style="width:16%; text-align:right;">Dry Powder</th>
+              </tr>
+            </thead>
+            <tbody>
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>케이디비 퀀텀 모빌리티 밸류체인 오픈이노베이션펀드</strong>
+            <span>퀀텀벤처스코리아</span>
+          </div>
+        </td>
+        <td class="stage-cell"><span class="stage-pill stage-red">Red</span></td>
+        <td class="domain-cell">기계장치 · 모빌리티</td>
+        <td class="value">25억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>스마일게이트로켓부스터3호</strong>
+            <span>스마일게이트인베스트먼트</span>
+          </div>
+        </td>
+        <td class="stage-cell"><span class="stage-pill stage-red">Red</span></td>
+        <td class="domain-cell">플랫폼 · 탄소저감·관리</td>
+        <td class="value">25.5억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>컴퍼니케이뉴스페이스펀드</strong>
+            <span>컴퍼니케이파트너스</span>
+          </div>
+        </td>
+        <td class="stage-cell"><span class="stage-pill stage-red">Red</span></td>
+        <td class="domain-cell">우주·항공·방산</td>
+        <td class="value">2.5억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>2024 에이스톤 미래환경 투자조합</strong>
+            <span>에이스톤벤처스</span>
+          </div>
+        </td>
+        <td class="stage-cell"><span class="stage-pill stage-red">Red</span></td>
+        <td class="domain-cell">탄소저감·관리</td>
+        <td class="value">30억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>스타트업코리아IBK-스틱테크챔피언펀드</strong>
+            <span>스틱벤처스</span>
+          </div>
+        </td>
+        <td class="stage-cell"><span class="stage-pill stage-green">Green</span></td>
+        <td class="domain-cell">반도체 · 배터리(이차전지) · 로봇 · 기계장치 · 모빌리티 · 신재생에너지</td>
+        <td class="value">35억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>스타트업 코리아 비전 2024 펀드</strong>
+            <span>신한벤처투자</span>
+          </div>
+        </td>
+        <td class="stage-cell"><span class="stage-pill stage-green">Green</span></td>
+        <td class="domain-cell">의료기기 · 반도체 · 신재생에너지</td>
+        <td class="value">50억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>스타트업코리아 카카오 코파일럿 펀드</strong>
+            <span>카카오벤처스</span>
+          </div>
+        </td>
+        <td class="stage-cell"><span class="stage-pill stage-red">Red</span></td>
+        <td class="domain-cell">의료기기 · 반도체 · 신재생에너지</td>
+        <td class="value">90억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>아이엠-에스제이 세이브어스 벤처펀드</strong>
+            <span>아이엠투자파트너스</span>
+          </div>
+        </td>
+        <td class="stage-cell"><span class="stage-pill stage-red">Red</span></td>
+        <td class="domain-cell">신재생에너지 · 탄소저감·관리</td>
+        <td class="value">90억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>베이스업템포벤처투자조합</strong>
+            <span>베이스벤처스</span>
+          </div>
+        </td>
+        <td class="stage-cell"><span class="stage-pill stage-red">Red</span></td>
+        <td class="domain-cell">반도체 · 우주·항공·방산 · 신재생에너지 · 플랫폼 · 배터리(이차전지) · 로봇 · 기계장치 · 물류 · 모빌리티 · 탄소저감·관리 · 의료기기 · 패션·뷰티 · 사이버보안</td>
+        <td class="value">40억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>성장금융 캡스톤 2025 딥테크 디캠프 투자조합</strong>
+            <span>캡스톤파트너스</span>
+          </div>
+        </td>
+        <td class="stage-cell"><span class="stage-pill stage-red">Red</span></td>
+        <td class="domain-cell">기계장치 · 신재생에너지 · 탄소저감·관리</td>
+        <td class="value">102.5억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>인터밸류8호 딥테크 창업기업 투자조합</strong>
+            <span>인터밸류파트너스</span>
+          </div>
+        </td>
+        <td class="stage-cell"><span class="stage-pill stage-red">Red</span></td>
+        <td class="domain-cell">기계장치 · 신재생에너지 · 탄소저감·관리</td>
+        <td class="value">100억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>퀀텀-KIF 12호 AI 펀드</strong>
+            <span>퀀텀벤처스코리아</span>
+          </div>
+        </td>
+        <td class="stage-cell"><span class="stage-pill stage-red">Red</span></td>
+        <td class="domain-cell">사이버보안 · 반도체 · 플랫폼</td>
+        <td class="value">100억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>에이벤처스 AX 유니콘 투자조합</strong>
+            <span>에이벤처스</span>
+          </div>
+        </td>
+        <td class="stage-cell"><span class="stage-pill stage-red">Red</span></td>
+        <td class="domain-cell">반도체 · 기계장치</td>
+        <td class="value">180억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>엘앤에스 K-Semi 르네상스 투자조합</strong>
+            <span>엘앤에스벤처캐피탈</span>
+          </div>
+        </td>
+        <td class="stage-cell"><span class="stage-pill stage-red">Red</span></td>
+        <td class="domain-cell">반도체</td>
+        <td class="value">60억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>아이엠엠 스타트업 벤처펀드 제2호</strong>
+            <span>아이엠엠인베스트먼트</span>
+          </div>
+        </td>
+        <td class="stage-cell"><span class="stage-pill stage-red">Red</span></td>
+        <td class="domain-cell">플랫폼</td>
+        <td class="value">100억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>DGDV Fund Ⅲ E.L.P. Cayman</strong>
+            <span>DG Daiwa ventures</span>
+          </div>
+        </td>
+        <td class="stage-cell"><span class="stage-pill stage-red">Red</span></td>
+        <td class="domain-cell">사이버보안</td>
+        <td class="value">28.5억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>Krew Capital Venture Fund I</strong>
+            <span>Krew Capital</span>
+          </div>
+        </td>
+        <td class="stage-cell"><span class="stage-pill stage-red">Red</span></td>
+        <td class="domain-cell">플랫폼</td>
+        <td class="value">42억</td>
+      </tr>
+    
+            </tbody>
+          </table>
+        </div>
+        <div class="table-note">투자단계 기준: Red = Seed ~ Series A · Green = Series B · Blue = Series C</div>
+      </article>
+
+      <article class="table-panel">
+        <div class="table-head">
+          <h2>배치_스타트업</h2>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:40%">스타트업명</th>
+                <th style="width:14%">단계</th>
+                <th style="width:30%">도메인</th>
+                <th style="width:16%; text-align:right;">필요자금</th>
+              </tr>
+            </thead>
+            <tbody>
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>바인드</strong>
+            <span>1기</span>
+          </div>
+        </td>
+        <td>Series C</td>
+        <td class="domain-cell">패션·뷰티</td>
+        <td class="value">65억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>테솔로</strong>
+            <span>2기</span>
+          </div>
+        </td>
+        <td>Series B</td>
+        <td class="domain-cell">로봇</td>
+        <td class="value">100억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>이플로우</strong>
+            <span>2기</span>
+          </div>
+        </td>
+        <td>Series A</td>
+        <td class="domain-cell">모빌리티</td>
+        <td class="value">180억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>브이피피랩</strong>
+            <span>2기</span>
+          </div>
+        </td>
+        <td>Series A</td>
+        <td class="domain-cell">신재생에너지</td>
+        <td class="value">80억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>디에스</strong>
+            <span>2기</span>
+          </div>
+        </td>
+        <td>Pre-A</td>
+        <td class="domain-cell">반도체</td>
+        <td class="value">50억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>렌트리</strong>
+            <span>3기</span>
+          </div>
+        </td>
+        <td>Series B</td>
+        <td class="domain-cell">플랫폼</td>
+        <td class="value">59억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>갭텍</strong>
+            <span>4기</span>
+          </div>
+        </td>
+        <td>Series B</td>
+        <td class="domain-cell">탄소저감·관리</td>
+        <td class="value">50억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>딥메트릭스</strong>
+            <span>4기</span>
+          </div>
+        </td>
+        <td>Series A</td>
+        <td class="domain-cell">의료기기</td>
+        <td class="value">100억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>메텍홀딩스</strong>
+            <span>4기</span>
+          </div>
+        </td>
+        <td>Series A</td>
+        <td class="domain-cell">의료기기</td>
+        <td class="value">20억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>스페이스린텍</strong>
+            <span>4기</span>
+          </div>
+        </td>
+        <td>Series B</td>
+        <td class="domain-cell">우주·항공·방산</td>
+        <td class="value">100억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>아이디어오션</strong>
+            <span>4기</span>
+          </div>
+        </td>
+        <td>Series A</td>
+        <td class="domain-cell">로봇</td>
+        <td class="value">30억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>아헤스</strong>
+            <span>4기</span>
+          </div>
+        </td>
+        <td>Series A</td>
+        <td class="domain-cell">기계장치</td>
+        <td class="value">100억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>코스모비</strong>
+            <span>4기</span>
+          </div>
+        </td>
+        <td>Series A</td>
+        <td class="domain-cell">우주·항공·방산</td>
+        <td class="value">50억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>테파로보틱스</strong>
+            <span>4기</span>
+          </div>
+        </td>
+        <td>Pre-A</td>
+        <td class="domain-cell">로봇</td>
+        <td class="value">40억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>퍼스트랩</strong>
+            <span>4기</span>
+          </div>
+        </td>
+        <td>Series A</td>
+        <td class="domain-cell">기계장치</td>
+        <td class="value">50억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>피트인</strong>
+            <span>4기</span>
+          </div>
+        </td>
+        <td>Series B</td>
+        <td class="domain-cell">모빌리티</td>
+        <td class="value">300억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>엔츠</strong>
+            <span>5기</span>
+          </div>
+        </td>
+        <td>Series B</td>
+        <td class="domain-cell">탄소저감·관리</td>
+        <td class="value">100억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>루트릭스</strong>
+            <span>5기</span>
+          </div>
+        </td>
+        <td>Series B</td>
+        <td class="domain-cell">플랫폼</td>
+        <td class="value">63억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>고이장례연구소</strong>
+            <span>5기</span>
+          </div>
+        </td>
+        <td>Series B</td>
+        <td class="domain-cell">플랫폼</td>
+        <td class="value">51억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>콘스탄트</strong>
+            <span>5기</span>
+          </div>
+        </td>
+        <td>Series B</td>
+        <td class="domain-cell">패션·뷰티</td>
+        <td class="value">90억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>위드포인츠</strong>
+            <span>6기</span>
+          </div>
+        </td>
+        <td>Series A</td>
+        <td class="domain-cell">로봇</td>
+        <td class="value">158억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>아이메디텍</strong>
+            <span>6기</span>
+          </div>
+        </td>
+        <td>Series B</td>
+        <td class="domain-cell">의료기기</td>
+        <td class="value">65억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>레디로버스트머신</strong>
+            <span>6기</span>
+          </div>
+        </td>
+        <td>Series B</td>
+        <td class="domain-cell">기계장치</td>
+        <td class="value">61억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>워커린스페이스</strong>
+            <span>6기</span>
+          </div>
+        </td>
+        <td>Series A</td>
+        <td class="domain-cell">우주·항공·방산</td>
+        <td class="value">53억</td>
+      </tr>
+    
+
+      <tr>
+        <td>
+          <div class="name-block">
+            <strong>에너테크</strong>
+            <span>6기</span>
+          </div>
+        </td>
+        <td>Series C</td>
+        <td class="domain-cell">탄소저감·관리</td>
+        <td class="value">27억</td>
+      </tr>
+    
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+  </div>
+
+  <div class="tooltip" id="tooltip"></div>
+
+  <script>
+    const DATA = {"summary": {"asOf": "2026-03-31", "asOfLabel": "2026.03.31", "totalManagers": 28, "totalFunds": 32, "reportedFunds": 17, "reportedManagers": 16, "totalStartups": 25, "visibleDomainCount": 13, "totalDomainCount": 13, "hiddenDomains": [], "matchingRule": {"Red": "Seed ~ Series A", "Green": "Series B", "Blue": "Series C"}, "coverageLowerBound": 0.3069}, "domains": [{"domain": "반도체", "tier": "Tier 1", "startupCount": 1.0, "requiredCapital": 50.0, "reportedDryPowder": 238.845, "dryPowder": 216.35, "plotDryPowder": 216.35, "stageMismatchDryPowder": 22.495, "reportedFunds": 7, "totalFunds": 13, "startupRows": 1, "stageBreakdown": [{"stage": "Red", "startupCount": 1.0, "requiredCapital": 50.0, "avgNeed": 50.0, "reportedDryPowder": 216.35, "matchingDryPowder": 216.35}, {"stage": "Green", "startupCount": 0.0, "requiredCapital": 0.0, "avgNeed": null, "reportedDryPowder": 22.495, "matchingDryPowder": 0.0}], "zeroDemand": false, "coverageRatio": 4.327, "coverableStartups": 4.327, "gap": 166.35}, {"domain": "우주·항공·방산", "tier": "Tier 1", "startupCount": 3.0, "requiredCapital": 203.0, "reportedDryPowder": 5.59, "dryPowder": 5.59, "plotDryPowder": 5.59, "stageMismatchDryPowder": 0.0, "reportedFunds": 2, "totalFunds": 4, "startupRows": 3, "stageBreakdown": [{"stage": "Red", "startupCount": 2.0, "requiredCapital": 103.0, "avgNeed": 51.5, "reportedDryPowder": 5.59, "matchingDryPowder": 5.59}, {"stage": "Green", "startupCount": 1.0, "requiredCapital": 100.0, "avgNeed": 100.0, "reportedDryPowder": 0.0, "matchingDryPowder": 0.0}], "zeroDemand": false, "coverageRatio": 0.027537, "coverableStartups": 0.0826, "gap": -197.41}, {"domain": "신재생에너지", "tier": "Tier 1", "startupCount": 1.0, "requiredCapital": 80.0, "reportedDryPowder": 167.9075, "dryPowder": 145.4825, "plotDryPowder": 145.4825, "stageMismatchDryPowder": 22.425, "reportedFunds": 7, "totalFunds": 11, "startupRows": 1, "stageBreakdown": [{"stage": "Red", "startupCount": 1.0, "requiredCapital": 80.0, "avgNeed": 80.0, "reportedDryPowder": 145.4825, "matchingDryPowder": 145.4825}, {"stage": "Green", "startupCount": 0.0, "requiredCapital": 0.0, "avgNeed": null, "reportedDryPowder": 22.425, "matchingDryPowder": 0.0}], "zeroDemand": false, "coverageRatio": 1.818531, "coverableStartups": 1.8185, "gap": 65.4825}, {"domain": "플랫폼", "tier": "Tier 1", "startupCount": 3.0, "requiredCapital": 173.0, "reportedDryPowder": 191.13, "dryPowder": 0.0, "plotDryPowder": 0.0, "stageMismatchDryPowder": 191.13, "reportedFunds": 5, "totalFunds": 12, "startupRows": 3, "stageBreakdown": [{"stage": "Red", "startupCount": 0.0, "requiredCapital": 0.0, "avgNeed": null, "reportedDryPowder": 191.13, "matchingDryPowder": 0.0}, {"stage": "Green", "startupCount": 3.0, "requiredCapital": 173.0, "avgNeed": 57.6667, "reportedDryPowder": 0.0, "matchingDryPowder": 0.0}], "zeroDemand": false, "coverageRatio": 0.0, "coverableStartups": 0.0, "gap": -173.0}, {"domain": "배터리(이차전지)", "tier": "Tier 2", "startupCount": 0.0, "requiredCapital": 0.0, "reportedDryPowder": 8.925, "dryPowder": 0.0, "plotDryPowder": 8.925, "stageMismatchDryPowder": 8.925, "reportedFunds": 2, "totalFunds": 4, "startupRows": 0, "stageBreakdown": [{"stage": "Red", "startupCount": 0.0, "requiredCapital": 0.0, "avgNeed": null, "reportedDryPowder": 3.08, "matchingDryPowder": 0.0}, {"stage": "Green", "startupCount": 0.0, "requiredCapital": 0.0, "avgNeed": null, "reportedDryPowder": 5.845, "matchingDryPowder": 0.0}], "zeroDemand": true, "coverageRatio": null, "coverableStartups": 0.0, "gap": null}, {"domain": "로봇", "tier": "Tier 2", "startupCount": 4.0, "requiredCapital": 328.0, "reportedDryPowder": 8.925, "dryPowder": 8.925, "plotDryPowder": 8.925, "stageMismatchDryPowder": 0.0, "reportedFunds": 2, "totalFunds": 5, "startupRows": 4, "stageBreakdown": [{"stage": "Red", "startupCount": 3.0, "requiredCapital": 228.0, "avgNeed": 76.0, "reportedDryPowder": 3.08, "matchingDryPowder": 3.08}, {"stage": "Green", "startupCount": 1.0, "requiredCapital": 100.0, "avgNeed": 100.0, "reportedDryPowder": 5.845, "matchingDryPowder": 5.845}], "zeroDemand": false, "coverageRatio": 0.02721, "coverableStartups": 0.1088, "gap": -319.075}, {"domain": "기계장치", "tier": "Tier 2", "startupCount": 3.0, "requiredCapital": 211.0, "reportedDryPowder": 179.06, "dryPowder": 179.06, "plotDryPowder": 179.06, "stageMismatchDryPowder": 0.0, "reportedFunds": 6, "totalFunds": 12, "startupRows": 3, "stageBreakdown": [{"stage": "Red", "startupCount": 2.0, "requiredCapital": 150.0, "avgNeed": 75.0, "reportedDryPowder": 173.215, "matchingDryPowder": 173.215}, {"stage": "Green", "startupCount": 1.0, "requiredCapital": 61.0, "avgNeed": 61.0, "reportedDryPowder": 5.845, "matchingDryPowder": 5.845}], "zeroDemand": false, "coverageRatio": 0.848626, "coverableStartups": 2.5459, "gap": -31.94}, {"domain": "물류", "tier": "Tier 2", "startupCount": 0.0, "requiredCapital": 0.0, "reportedDryPowder": 3.08, "dryPowder": 0.0, "plotDryPowder": 3.08, "stageMismatchDryPowder": 3.08, "reportedFunds": 1, "totalFunds": 3, "startupRows": 0, "stageBreakdown": [{"stage": "Red", "startupCount": 0.0, "requiredCapital": 0.0, "avgNeed": null, "reportedDryPowder": 3.08, "matchingDryPowder": 0.0}], "zeroDemand": true, "coverageRatio": null, "coverableStartups": 0.0, "gap": null}, {"domain": "모빌리티", "tier": "Tier 3", "startupCount": 2.0, "requiredCapital": 480.0, "reportedDryPowder": 21.425, "dryPowder": 21.425, "plotDryPowder": 21.425, "stageMismatchDryPowder": -0.0, "reportedFunds": 3, "totalFunds": 5, "startupRows": 2, "stageBreakdown": [{"stage": "Red", "startupCount": 1.0, "requiredCapital": 180.0, "avgNeed": 180.0, "reportedDryPowder": 15.58, "matchingDryPowder": 15.58}, {"stage": "Green", "startupCount": 1.0, "requiredCapital": 300.0, "avgNeed": 300.0, "reportedDryPowder": 5.845, "matchingDryPowder": 5.845}], "zeroDemand": false, "coverageRatio": 0.044635, "coverableStartups": 0.0893, "gap": -458.575}, {"domain": "탄소저감·관리", "tier": "Tier 3", "startupCount": 3.0, "requiredCapital": 177.0, "reportedDryPowder": 158.2325, "dryPowder": 0.0, "plotDryPowder": 0.0, "stageMismatchDryPowder": 158.2325, "reportedFunds": 6, "totalFunds": 8, "startupRows": 3, "stageBreakdown": [{"stage": "Red", "startupCount": 0.0, "requiredCapital": 0.0, "avgNeed": null, "reportedDryPowder": 158.2325, "matchingDryPowder": 0.0}, {"stage": "Green", "startupCount": 2.0, "requiredCapital": 150.0, "avgNeed": 75.0, "reportedDryPowder": 0.0, "matchingDryPowder": 0.0}, {"stage": "Blue", "startupCount": 1.0, "requiredCapital": 27.0, "avgNeed": 27.0, "reportedDryPowder": 0.0, "matchingDryPowder": 0.0}], "zeroDemand": false, "coverageRatio": 0.0, "coverableStartups": 0.0, "gap": -177.0}, {"domain": "의료기기", "tier": "Tier 3", "startupCount": 3.0, "requiredCapital": 185.0, "reportedDryPowder": 49.84, "dryPowder": 49.84, "plotDryPowder": 49.84, "stageMismatchDryPowder": 0.0, "reportedFunds": 3, "totalFunds": 4, "startupRows": 3, "stageBreakdown": [{"stage": "Red", "startupCount": 2.0, "requiredCapital": 120.0, "avgNeed": 60.0, "reportedDryPowder": 33.14, "matchingDryPowder": 33.14}, {"stage": "Green", "startupCount": 1.0, "requiredCapital": 65.0, "avgNeed": 65.0, "reportedDryPowder": 16.7, "matchingDryPowder": 16.7}], "zeroDemand": false, "coverageRatio": 0.269405, "coverableStartups": 0.8082, "gap": -135.16}, {"domain": "패션·뷰티", "tier": "Tier 3", "startupCount": 2.0, "requiredCapital": 155.0, "reportedDryPowder": 3.08, "dryPowder": 0.0, "plotDryPowder": 0.0, "stageMismatchDryPowder": 3.08, "reportedFunds": 1, "totalFunds": 3, "startupRows": 2, "stageBreakdown": [{"stage": "Red", "startupCount": 0.0, "requiredCapital": 0.0, "avgNeed": null, "reportedDryPowder": 3.08, "matchingDryPowder": 0.0}, {"stage": "Green", "startupCount": 1.0, "requiredCapital": 90.0, "avgNeed": 90.0, "reportedDryPowder": 0.0, "matchingDryPowder": 0.0}, {"stage": "Blue", "startupCount": 1.0, "requiredCapital": 65.0, "avgNeed": 65.0, "reportedDryPowder": 0.0, "matchingDryPowder": 0.0}], "zeroDemand": false, "coverageRatio": 0.0, "coverableStartups": 0.0, "gap": -155.0}, {"domain": "사이버보안", "tier": "Strategic", "startupCount": 0.0, "requiredCapital": 0.0, "reportedDryPowder": 64.94, "dryPowder": 0.0, "plotDryPowder": 64.94, "stageMismatchDryPowder": 64.94, "reportedFunds": 3, "totalFunds": 4, "startupRows": 0, "stageBreakdown": [{"stage": "Red", "startupCount": 0.0, "requiredCapital": 0.0, "avgNeed": null, "reportedDryPowder": 64.94, "matchingDryPowder": 0.0}], "zeroDemand": true, "coverageRatio": null, "coverableStartups": 0.0, "gap": null}], "domainOrder": ["반도체", "우주·항공·방산", "신재생에너지", "플랫폼", "배터리(이차전지)", "로봇", "기계장치", "물류", "모빌리티", "탄소저감·관리", "의료기기", "패션·뷰티", "사이버보안"], "fundTable": [{"manager": "퀀텀벤처스코리아", "fund": "케이디비 퀀텀 모빌리티 밸류체인 오픈이노베이션펀드", "stage": "Red", "domains": ["기계장치", "모빌리티"], "dryPowder": 25}, {"manager": "스마일게이트인베스트먼트", "fund": "스마일게이트로켓부스터3호", "stage": "Red", "domains": ["플랫폼", "탄소저감·관리"], "dryPowder": 25.5}, {"manager": "컴퍼니케이파트너스", "fund": "컴퍼니케이뉴스페이스펀드", "stage": "Red", "domains": ["우주·항공·방산"], "dryPowder": 2.51}, {"manager": "에이스톤벤처스", "fund": "2024 에이스톤 미래환경 투자조합", "stage": "Red", "domains": ["탄소저감·관리"], "dryPowder": 29.97}, {"manager": "스틱벤처스", "fund": "스타트업코리아IBK-스틱테크챔피언펀드", "stage": "Green", "domains": ["반도체", "배터리(이차전지)", "로봇", "기계장치", "모빌리티", "신재생에너지"], "dryPowder": 35}, {"manager": "신한벤처투자", "fund": "스타트업 코리아 비전 2024 펀드", "stage": "Green", "domains": ["의료기기", "반도체", "신재생에너지"], "dryPowder": 50}, {"manager": "카카오벤처스", "fund": "스타트업코리아 카카오 코파일럿 펀드", "stage": "Red", "domains": ["의료기기", "반도체", "신재생에너지"], "dryPowder": 90}, {"manager": "아이엠투자파트너스", "fund": "아이엠-에스제이 세이브어스 벤처펀드", "stage": "Red", "domains": ["신재생에너지", "탄소저감·관리"], "dryPowder": 90}, {"manager": "베이스벤처스", "fund": "베이스업템포벤처투자조합", "stage": "Red", "domains": ["반도체", "우주·항공·방산", "신재생에너지", "플랫폼", "배터리(이차전지)", "로봇", "기계장치", "물류", "모빌리티", "탄소저감·관리", "의료기기", "패션·뷰티", "사이버보안"], "dryPowder": 40}, {"manager": "캡스톤파트너스", "fund": "성장금융 캡스톤 2025 딥테크 디캠프 투자조합", "stage": "Red", "domains": ["기계장치", "신재생에너지", "탄소저감·관리"], "dryPowder": 102.5}, {"manager": "인터밸류파트너스", "fund": "인터밸류8호 딥테크 창업기업 투자조합", "stage": "Red", "domains": ["기계장치", "신재생에너지", "탄소저감·관리"], "dryPowder": 100}, {"manager": "퀀텀벤처스코리아", "fund": "퀀텀-KIF 12호 AI 펀드", "stage": "Red", "domains": ["사이버보안", "반도체", "플랫폼"], "dryPowder": 100}, {"manager": "에이벤처스", "fund": "에이벤처스 AX 유니콘 투자조합", "stage": "Red", "domains": ["반도체", "기계장치"], "dryPowder": 180}, {"manager": "엘앤에스벤처캐피탈", "fund": "엘앤에스 K-Semi 르네상스 투자조합", "stage": "Red", "domains": ["반도체"], "dryPowder": 60}, {"manager": "아이엠엠인베스트먼트", "fund": "아이엠엠 스타트업 벤처펀드 제2호", "stage": "Red", "domains": ["플랫폼"], "dryPowder": 100}, {"manager": "DG Daiwa ventures", "fund": "DGDV Fund Ⅲ E.L.P. Cayman", "stage": "Red", "domains": ["사이버보안"], "dryPowder": 28.5}, {"manager": "Krew Capital", "fund": "Krew Capital Venture Fund I", "stage": "Red", "domains": ["플랫폼"], "dryPowder": 42}], "startupTable": [{"startup": "바인드", "batch": "1기", "stage": "Series C", "domains": ["패션·뷰티"], "requiredCapital": 65}, {"startup": "테솔로", "batch": "2기", "stage": "Series B", "domains": ["로봇"], "requiredCapital": 100}, {"startup": "이플로우", "batch": "2기", "stage": "Series A", "domains": ["모빌리티"], "requiredCapital": 180}, {"startup": "브이피피랩", "batch": "2기", "stage": "Series A", "domains": ["신재생에너지"], "requiredCapital": 80}, {"startup": "디에스", "batch": "2기", "stage": "Pre-A", "domains": ["반도체"], "requiredCapital": 50}, {"startup": "렌트리", "batch": "3기", "stage": "Series B", "domains": ["플랫폼"], "requiredCapital": 59}, {"startup": "갭텍", "batch": "4기", "stage": "Series B", "domains": ["탄소저감·관리"], "requiredCapital": 50}, {"startup": "딥메트릭스", "batch": "4기", "stage": "Series A", "domains": ["의료기기"], "requiredCapital": 100}, {"startup": "메텍홀딩스", "batch": "4기", "stage": "Series A", "domains": ["의료기기"], "requiredCapital": 20}, {"startup": "스페이스린텍", "batch": "4기", "stage": "Series B", "domains": ["우주·항공·방산"], "requiredCapital": 100}, {"startup": "아이디어오션", "batch": "4기", "stage": "Series A", "domains": ["로봇"], "requiredCapital": 30}, {"startup": "아헤스", "batch": "4기", "stage": "Series A", "domains": ["기계장치"], "requiredCapital": 100}, {"startup": "코스모비", "batch": "4기", "stage": "Series A", "domains": ["우주·항공·방산"], "requiredCapital": 50}, {"startup": "테파로보틱스", "batch": "4기", "stage": "Pre-A", "domains": ["로봇"], "requiredCapital": 40}, {"startup": "퍼스트랩", "batch": "4기", "stage": "Series A", "domains": ["기계장치"], "requiredCapital": 50}, {"startup": "피트인", "batch": "4기", "stage": "Series B", "domains": ["모빌리티"], "requiredCapital": 300}, {"startup": "엔츠", "batch": "5기", "stage": "Series B", "domains": ["탄소저감·관리"], "requiredCapital": 100}, {"startup": "루트릭스", "batch": "5기", "stage": "Series B", "domains": ["플랫폼"], "requiredCapital": 63}, {"startup": "고이장례연구소", "batch": "5기", "stage": "Series B", "domains": ["플랫폼"], "requiredCapital": 51}, {"startup": "콘스탄트", "batch": "5기", "stage": "Series B", "domains": ["패션·뷰티"], "requiredCapital": 90}, {"startup": "위드포인츠", "batch": "6기", "stage": "Series A", "domains": ["로봇"], "requiredCapital": 158}, {"startup": "아이메디텍", "batch": "6기", "stage": "Series B", "domains": ["의료기기"], "requiredCapital": 65}, {"startup": "레디로버스트머신", "batch": "6기", "stage": "Series B", "domains": ["기계장치"], "requiredCapital": 61}, {"startup": "워커린스페이스", "batch": "6기", "stage": "Series A", "domains": ["우주·항공·방산"], "requiredCapital": 53}, {"startup": "에너테크", "batch": "6기", "stage": "Series C", "domains": ["탄소저감·관리"], "requiredCapital": 27}]};
+    const LABEL_PRESETS = {"반도체": {"dx": -88, "dy": -20, "anchor": "end"}, "우주·항공·방산": {"dx": 96, "dy": 54, "anchor": "start"}, "신재생에너지": {"dx": 8, "dy": -88, "anchor": "middle"}, "플랫폼": {"dx": 96, "dy": -94, "anchor": "start"}, "배터리(이차전지)": {"dx": -88, "dy": 10, "anchor": "end"}, "로봇": {"dx": 88, "dy": 10, "anchor": "start"}, "기계장치": {"dx": 104, "dy": -10, "anchor": "start"}, "물류": {"dx": -74, "dy": 72, "anchor": "end"}, "모빌리티": {"dx": 94, "dy": 34, "anchor": "start"}, "탄소저감·관리": {"dx": -18, "dy": 80, "anchor": "middle"}, "의료기기": {"dx": -90, "dy": -86, "anchor": "end"}, "패션·뷰티": {"dx": -92, "dy": 40, "anchor": "end"}, "사이버보안": {"dx": -90, "dy": -18, "anchor": "end"}};
+    const tooltip = document.getElementById('tooltip');
+
+    function fmtMoney(v) {
+      const n = Number(v || 0);
+      const hasDecimal = Math.abs(n % 1) > 0.001;
+      return `${n.toLocaleString('ko-KR', { minimumFractionDigits: hasDecimal ? 1 : 0, maximumFractionDigits: 1 })}억`;
+    }
+    function fmtCount(v) {
+      const n = Number(v || 0);
+      return n.toLocaleString('ko-KR', { minimumFractionDigits: Math.abs(n % 1) > 0.001 ? 1 : 0, maximumFractionDigits: 1 });
+    }
+    function esc(text) {
+      return String(text).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    }
+    function showTooltip(evt, d) {
+      if (d.zeroDemand) {
+        tooltip.innerHTML = `
+          <div class="t-title">${esc(d.domain)}</div>
+          <div class="t-note">현재 배치 스타트업 없음</div>
+          <div class="t-row"><span>도메인 Dry Powder</span><strong>${fmtMoney(d.plotDryPowder)}</strong></div>
+        `;
+      } else {
+        tooltip.innerHTML = `
+          <div class="t-title">${esc(d.domain)}</div>
+          <div class="t-row"><span>배치 스타트업 수</span><strong>${fmtCount(d.startupCount)}개</strong></div>
+          <div class="t-row"><span>추정 필요자금</span><strong>${fmtMoney(d.requiredCapital)}</strong></div>
+          <div class="t-row"><span>매칭 Dry Powder</span><strong>${fmtMoney(d.dryPowder)}</strong></div>
+        `;
+      }
+      tooltip.classList.add('visible');
+      moveTooltip(evt);
+    }
+    function moveTooltip(evt) {
+      tooltip.style.left = `${evt.clientX}px`;
+      tooltip.style.top = `${evt.clientY}px`;
+    }
+    function hideTooltip() {
+      tooltip.classList.remove('visible');
+    }
+
+    function labelLines(domain) {
+      if (domain === '우주·항공·방산') return ['우주·항공', '방산'];
+      if (domain === '배터리(이차전지)') return ['배터리', '(이차전지)'];
+      if (domain === '탄소저감·관리') return ['탄소저감', '관리'];
+      return [domain];
+    }
+    const TIER_THEME = {
+      'Tier 1': {
+        label: 'Tier 1',
+        stroke: '#FF5E27',
+        fill: 'rgba(255,94,39,.18)',
+        labelStroke: 'rgba(255,94,39,.34)'
+      },
+      'Tier 2': {
+        label: 'Tier 2',
+        stroke: '#F5B348',
+        fill: 'rgba(245,179,72,.18)',
+        labelStroke: 'rgba(245,179,72,.32)'
+      },
+      'Tier 3': {
+        label: 'Tier 3',
+        stroke: '#BCC3D4',
+        fill: 'rgba(188,195,212,.16)',
+        labelStroke: 'rgba(188,195,212,.28)'
+      },
+      'Strategic': {
+        label: 'Strategic',
+        stroke: '#6EA8FF',
+        fill: 'rgba(110,168,255,.17)',
+        labelStroke: 'rgba(110,168,255,.32)'
+      }
+    };
+
+    function tierFont(d) {
+      if (d.tier === 'Tier 1') return { size: 14, weight: 700, fill: 'rgba(245,244,239,.96)' };
+      if (d.tier === 'Tier 2') return { size: 13, weight: 650, fill: 'rgba(245,244,239,.92)' };
+      if (d.tier === 'Strategic') return { size: 13.5, weight: 700, fill: 'rgba(245,244,239,.96)' };
+      return { size: 12.5, weight: 600, fill: 'rgba(245,244,239,.86)' };
+    }
+    function bubbleStyle(d) {
+      const theme = TIER_THEME[d.tier] || TIER_THEME['Tier 3'];
+      return {
+        fill: theme.fill,
+        stroke: theme.stroke,
+        labelStroke: theme.labelStroke,
+        width: 2.35,
+        dash: ''
+      };
+    }
+    function bubbleRadius(d) {
+      return 17;
+    }
+    function labelBoxMetrics(lines, fontSize) {
+      const longest = Math.max(...lines.map(line => Array.from(line).length));
+      return {
+        width: Math.max(longest * fontSize * 0.64 + 24, 82),
+        height: lines.length * 15 + 14,
+        lineHeight: 15
+      };
+    }
+
+    function renderCoverage() {
+      const root = document.getElementById('coverage-root');
+      const rect = root.getBoundingClientRect();
+      const width = Math.max(320, rect.width);
+      const height = Math.max(760, rect.height);
+      const margin = { top: 126, right: 170, bottom: 120, left: 170 };
+      const plotSize = Math.min(width - margin.left - margin.right, height - margin.top - margin.bottom);
+      const plotLeft = margin.left + ((width - margin.left - margin.right) - plotSize) / 2;
+      const plotTop = margin.top + ((height - margin.top - margin.bottom) - plotSize) / 2;
+      const rawMax = Math.max(...DATA.domains.map(d => Math.max(Number(d.requiredCapital || 0), Number(d.plotDryPowder || 0), 100)));
+      const maxVal = Math.ceil(rawMax / 100) * 100 + 20;
+      const floorPad = 0;
+      const legendItems = ['Tier 1', 'Tier 2', 'Tier 3', 'Strategic'].map(key => ({ key, ...TIER_THEME[key] }));
+      const legendY = 42;
+      const legendGap = 132;
+      const legendStartX = width / 2 - ((legendItems.length - 1) * legendGap) / 2;
+      const explainFont = width < 920 ? 11.5 : 12.5;
+      const explainText = width < 920
+        ? 'y = x 기준 아래는 필요자금 대비 Dry Powder 부족, 위는 여유를 의미합니다.'
+        : 'y = x 기준 아래는 필요자금 대비 Dry Powder 부족, 위는 필요자금 대비 Dry Powder 여유를 의미합니다.';
+
+      function xScale(v) { return plotLeft + (v / maxVal) * plotSize; }
+      function yScale(v) { return plotTop + plotSize - ((v) / maxVal) * plotSize; }
+
+      const ticks = [];
+      for (let t = 0; t <= maxVal; t += 100) ticks.push(t);
+
+      let svg = `
+        <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Coverage Bubble Chart">
+          <defs>
+            <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="rgba(0,0,0,.32)"/>
+            </filter>
+          </defs>
+          <rect x="0" y="0" width="${width}" height="${height}" fill="transparent" />
+          <g>
+      `;
+
+      legendItems.forEach((item, index) => {
+        const cx = legendStartX + index * legendGap;
+        svg += `
+          <g aria-hidden="true">
+            <circle cx="${cx}" cy="${legendY}" r="7" fill="${item.fill}" stroke="${item.stroke}" stroke-width="2"></circle>
+            <text x="${cx + 16}" y="${legendY + 4}" fill="rgba(245,244,239,.90)" font-size="12.5" font-weight="620" text-anchor="start">${item.label}</text>
+          </g>
+        `;
+      });
+
+      svg += `
+        <text x="${width / 2}" y="74" fill="rgba(156,155,149,.94)" font-size="${explainFont}" font-weight="560" text-anchor="middle">${explainText}</text>
+      `;
+
+      ticks.forEach(t => {
+        const x = xScale(t);
+        const y = yScale(t);
+        svg += `<line x1="${x}" y1="${plotTop}" x2="${x}" y2="${plotTop + plotSize}" stroke="rgba(255,255,255,.06)" stroke-width="1"/>`;
+        svg += `<line x1="${plotLeft}" y1="${y}" x2="${plotLeft + plotSize}" y2="${y}" stroke="rgba(255,255,255,.06)" stroke-width="1"/>`;
+        svg += `<text x="${x}" y="${plotTop + plotSize + 28}" fill="rgba(156,155,149,.92)" font-size="12" text-anchor="middle">${t}</text>`;
+        if (t !== 0) {
+          svg += `<text x="${plotLeft - 18}" y="${y + 4}" fill="rgba(156,155,149,.92)" font-size="12" text-anchor="end">${t}</text>`;
+        }
+      });
+
+      svg += `
+        <line x1="${plotLeft}" y1="${plotTop + plotSize}" x2="${plotLeft + plotSize}" y2="${plotTop}" stroke="rgba(255,94,39,.46)" stroke-width="1.5" stroke-dasharray="6 8"/>
+        <text x="${plotLeft + plotSize - 8}" y="${plotTop + 20}" fill="rgba(255,94,39,.88)" font-size="12" text-anchor="end">y = x</text>
+        <line x1="${plotLeft}" y1="${plotTop + plotSize}" x2="${plotLeft + plotSize}" y2="${plotTop + plotSize}" stroke="rgba(255,255,255,.16)" stroke-width="1.4"/>
+        <line x1="${plotLeft}" y1="${plotTop}" x2="${plotLeft}" y2="${plotTop + plotSize}" stroke="rgba(255,255,255,.16)" stroke-width="1.4"/>
+        <text x="${plotLeft + plotSize / 2}" y="${height - 18}" fill="rgba(156,155,149,.92)" font-size="13" text-anchor="middle">추정 필요자금 (억원)</text>
+        <text x="34" y="${plotTop + plotSize / 2}" fill="rgba(156,155,149,.92)" font-size="13" text-anchor="middle" transform="rotate(-90, 34, ${plotTop + plotSize / 2})">Dry Powder (억원)</text>
+      `;
+
+      const sortedDomains = [...DATA.domains].sort((a, b) => (Number(b.plotDryPowder || 0) - Number(a.plotDryPowder || 0)) || (Number(a.requiredCapital || 0) - Number(b.requiredCapital || 0)));
+
+      sortedDomains.forEach((d) => {
+        const x = xScale(Number(d.requiredCapital || 0));
+        const plotYValue = Math.max(floorPad, Number(d.plotDryPowder || 0));
+        const y = yScale(plotYValue);
+        const r = bubbleRadius(d);
+        const style = bubbleStyle(d);
+
+        svg += `
+          <g class="bubble-hit" data-domain="${esc(d.domain)}" style="cursor:pointer">
+            <circle cx="${x}" cy="${y}" r="${r + 10}" fill="transparent"></circle>
+            <circle cx="${x}" cy="${y}" r="${r}" fill="${style.fill}" stroke="${style.stroke}" stroke-width="${style.width}" stroke-dasharray="${style.dash}" filter="url(#softGlow)"></circle>
+          </g>
+        `;
+      });
+
+      DATA.domains.forEach((d) => {
+        const x = xScale(Number(d.requiredCapital || 0));
+        const plotYValue = Math.max(floorPad, Number(d.plotDryPowder || 0));
+        const y = yScale(plotYValue);
+        const r = bubbleRadius(d);
+        const style = bubbleStyle(d);
+        const font = tierFont(d);
+        const lines = labelLines(d.domain);
+        const preset = LABEL_PRESETS[d.domain] || { dx: 20, dy: 0, anchor: 'start' };
+        const metrics = labelBoxMetrics(lines, font.size);
+        const labelAnchorX = x + preset.dx;
+        const labelAnchorY = y + preset.dy;
+        const boxX = preset.anchor === 'start'
+          ? labelAnchorX
+          : preset.anchor === 'end'
+            ? labelAnchorX - metrics.width
+            : labelAnchorX - metrics.width / 2;
+        const boxY = labelAnchorY - metrics.height / 2;
+        const boxCenterX = boxX + metrics.width / 2;
+        const boxCenterY = boxY + metrics.height / 2;
+
+        const vx = boxCenterX - x;
+        const vy = boxCenterY - y;
+        const dist = Math.max(Math.hypot(vx, vy), 1);
+        const lineStartX = x + (vx / dist) * (r + 5);
+        const lineStartY = y + (vy / dist) * (r + 5);
+
+        const textAnchor = preset.anchor === 'start' ? 'start' : preset.anchor === 'end' ? 'end' : 'middle';
+        const textX = preset.anchor === 'start'
+          ? boxX + 12
+          : preset.anchor === 'end'
+            ? boxX + metrics.width - 12
+            : boxCenterX;
+
+        svg += `
+          <g class="bubble-hit" data-domain="${esc(d.domain)}" style="cursor:pointer">
+            <line x1="${lineStartX}" y1="${lineStartY}" x2="${boxCenterX}" y2="${boxCenterY}" stroke="${style.labelStroke}" stroke-width="1.1"></line>
+            <rect x="${boxX}" y="${boxY}" width="${metrics.width}" height="${metrics.height}" rx="12" fill="rgba(9,9,10,.94)" stroke="${style.labelStroke}" stroke-width="1"></rect>
+            <text x="${textX}" y="${boxY + 17}" fill="${font.fill}" font-size="${font.size}" font-weight="${font.weight}" text-anchor="${textAnchor}">
+              ${lines.map((line, idx) => `<tspan x="${textX}" dy="${idx === 0 ? 0 : metrics.lineHeight}">${esc(line)}</tspan>`).join('')}
+            </text>
+          </g>
+        `;
+      });
+
+      svg += `</g></svg>`;
+      root.innerHTML = svg;
+
+      root.querySelectorAll('.bubble-hit').forEach(el => {
+        const domain = el.getAttribute('data-domain');
+        const d = DATA.domains.find(item => item.domain === domain);
+        el.addEventListener('mouseenter', evt => showTooltip(evt, d));
+        el.addEventListener('mousemove', moveTooltip);
+        el.addEventListener('mouseleave', hideTooltip);
+      });
+    }
+
+    window.addEventListener('resize', () => {
+      clearTimeout(window.__dcampResizeTimer);
+      window.__dcampResizeTimer = setTimeout(renderCoverage, 80);
+    });
+
+    renderCoverage();
+  </script>
+</body>
+</html>
