@@ -1,0 +1,2903 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>dcamp · Sector × RGB Map</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/orioncactus/[email protected]/dist/web/static/pretendard.css"
+  />
+  <style>
+    /* =========================================================
+       1. 디자인 토큰 (CSS 변수)
+       ========================================================= */
+    :root {
+      /* 베이스 */
+      --bg-page: #FAFAF9;
+      --bg-card: #FFFFFF;
+      --bg-subtle: #F5F5F4;
+      --border-soft: #E7E5E4;
+      --border-strong: #D6D3D1;
+
+      /* 텍스트 */
+      --text-primary: #1C1917;
+      --text-secondary: #57534E;
+      --text-tertiary: #A8A29E;
+
+      /* 브랜드 (디캠프 오렌지) */
+      --brand: #FF5E27;
+      --brand-soft: #FFF1EB;
+
+      /* RGB 단계 */
+      --red: #EF4444;
+      --red-soft: #FEF2F2;
+      --red-border: #FECACA;
+      --red-text: #991B1B;
+
+      --green: #22C55E;
+      --green-soft: #F0FDF4;
+      --green-border: #BBF7D0;
+      --green-text: #166534;
+
+      --blue: #3B82F6;
+      --blue-soft: #EFF6FF;
+      --blue-border: #BFDBFE;
+      --blue-text: #1E40AF;
+
+      /* 공백 알림 */
+      --warn-bg: #FFFBEB;
+      --warn-border: #FBBF24;
+      --warn-text: #B45309;
+
+      --crit-bg: #FEF2F2;
+      --crit-border: #F87171;
+      --crit-text: #B91C1C;
+
+      /* 회색 칩 (DP 없음) */
+      --chip-empty-bg: #F5F5F4;
+      --chip-empty-text: #A8A29E;
+      --chip-empty-border: #E7E5E4;
+      --chip-empty-opacity: 0.6;
+
+      /* Tier 배지 */
+      --tier1-bg: #DBEAFE; --tier1-text: #1E40AF;
+      --tier2-bg: #E0F2FE; --tier2-text: #0369A1;
+      --tier3-bg: #F0F9FF; --tier3-text: #0C4A6E;
+      --strategic-bg: #FFF1EB; --strategic-text: #C2410C;
+      --generalist-bg: #F5F3FF; --generalist-text: #5B21B6;
+
+      /* 레이아웃 */
+      --max-width: 1280px;
+      --container-pad: 32px;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+
+      /* 그림자 (절제) */
+      --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.04);
+      --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.06);
+
+      /* 모션 */
+      --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+      --dur: 200ms;
+    }
+
+    /* =========================================================
+       2. 리셋 & 베이스 타이포
+       ========================================================= */
+    *,
+    *::before,
+    *::after { box-sizing: border-box; }
+
+    html, body { margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Pretendard', 'Apple SD Gothic Neo', -apple-system,
+        BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--text-primary);
+      background: var(--bg-page);
+      letter-spacing: -0.01em;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    h1, h2, h3, h4, p { margin: 0; }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* =========================================================
+       3. 컨테이너
+       ========================================================= */
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 var(--container-pad);
+    }
+
+    /* =========================================================
+       4. 사이트 헤더
+       ========================================================= */
+    .site-header {
+      padding: 28px 0 22px;
+      border-bottom: 1px solid var(--border-soft);
+      background: var(--bg-page);
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      min-width: 0;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      height: 26px;
+      flex-shrink: 0;
+    }
+    .logo svg {
+      height: 100%;
+      width: auto;
+      display: block;
+    }
+
+    .logo-divider {
+      width: 1px;
+      height: 24px;
+      background: var(--border-strong);
+      flex-shrink: 0;
+    }
+
+    .titles { min-width: 0; }
+    .titles h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      line-height: 1.25;
+    }
+    .titles .subtitle {
+      margin-top: 3px;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      font-weight: 400;
+      letter-spacing: -0.01em;
+    }
+
+    /* 헤더 메타 */
+    .header-meta {
+      display: flex;
+      gap: 28px;
+      align-items: flex-start;
+    }
+    .meta-item { text-align: right; }
+    .meta-item .meta-label {
+      font-size: 10.5px;
+      color: var(--text-tertiary);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 3px;
+    }
+    .meta-item .meta-value {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+    .meta-item .meta-value strong {
+      font-weight: 700;
+      font-size: 15px;
+      margin-right: 1px;
+    }
+    .meta-item .meta-value .unit {
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-left: 1px;
+    }
+
+    /* =========================================================
+       5. 메인 (이번 단계는 placeholder만)
+       ========================================================= */
+    main { padding: 36px 0 80px; }
+
+    .stage-note {
+      padding: 22px 24px;
+      background: var(--bg-card);
+      border: 1px dashed var(--border-soft);
+      border-radius: var(--radius-md);
+      color: var(--text-tertiary);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .stage-note strong {
+      color: var(--text-secondary);
+      font-weight: 600;
+      margin-right: 6px;
+    }
+
+    /* =========================================================
+       5a. ACTIONS (PDF / PPTX 추출)
+       ========================================================= */
+    .actions-bar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .action-btn {
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 500;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-soft);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      cursor: pointer;
+      letter-spacing: -0.01em;
+      transition: all var(--dur) var(--ease);
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      box-shadow: var(--shadow-soft);
+    }
+    .action-btn:hover {
+      border-color: var(--brand);
+      color: var(--brand);
+      background: var(--brand-soft);
+      box-shadow: var(--shadow-hover);
+    }
+    .action-btn:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+    }
+    .action-btn:disabled {
+      opacity: 0.6;
+      cursor: progress;
+      border-color: var(--border-soft);
+      color: var(--text-tertiary);
+      background: var(--bg-subtle);
+      box-shadow: none;
+    }
+    .action-btn svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    /* =========================================================
+       5b. KPI ROW
+       ========================================================= */
+    .section-title-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+    .section-hint {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      letter-spacing: -0.01em;
+    }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 40px;
+    }
+
+    .kpi-card {
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px 18px 26px;
+      box-shadow: var(--shadow-soft);
+      transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease), border-color var(--dur) var(--ease);
+      overflow: hidden;
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: var(--bar, var(--brand));
+    }
+    .kpi-card:hover {
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-1px);
+    }
+    .kpi-card.kpi-r { --bar: var(--red); }
+    .kpi-card.kpi-g { --bar: var(--green); }
+    .kpi-card.kpi-b { --bar: var(--blue); }
+    .kpi-card.kpi-total { --bar: var(--brand); }
+
+    .kpi-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 999px;
+      letter-spacing: 0;
+      margin-bottom: 12px;
+    }
+    .kpi-tag .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--bar);
+      flex-shrink: 0;
+    }
+    .kpi-card.kpi-r .kpi-tag { background: var(--red-soft); color: var(--red-text); }
+    .kpi-card.kpi-g .kpi-tag { background: var(--green-soft); color: var(--green-text); }
+    .kpi-card.kpi-b .kpi-tag { background: var(--blue-soft); color: var(--blue-text); }
+    .kpi-card.kpi-total .kpi-tag { background: var(--brand-soft); color: var(--brand); }
+
+    .kpi-tag .stage-en { font-weight: 700; letter-spacing: 0.01em; }
+    .kpi-tag .stage-ko { opacity: 0.85; font-weight: 500; }
+
+    .kpi-value {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--text-primary);
+      line-height: 1.1;
+      display: flex;
+      align-items: baseline;
+      gap: 3px;
+    }
+    .kpi-value .unit {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .kpi-meta {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--text-tertiary);
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      letter-spacing: -0.01em;
+    }
+    .kpi-meta .piece strong {
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+    .kpi-meta .sep {
+      color: var(--border-strong);
+      user-select: none;
+    }
+
+    /* =========================================================
+       5c. FILTER BAR
+       ========================================================= */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding: 10px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
+    }
+    .filter-bar .filter-label {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      font-weight: 500;
+      margin-right: 6px;
+      letter-spacing: -0.01em;
+    }
+    .filter-btn {
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 500;
+      padding: 7px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      cursor: pointer;
+      letter-spacing: -0.01em;
+      transition: all var(--dur) var(--ease);
+    }
+    .filter-btn:hover {
+      border-color: var(--border-strong);
+      color: var(--text-primary);
+    }
+    .filter-btn.active {
+      background: var(--text-primary);
+      color: #fff;
+      border-color: var(--text-primary);
+      font-weight: 600;
+    }
+    .filter-btn:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+    }
+
+    /* =========================================================
+       5d. MATRIX
+       ========================================================= */
+    .matrix-wrap {
+      margin-bottom: 40px;
+      overflow-x: auto;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-soft);
+      background: var(--bg-card);
+    }
+    .matrix {
+      display: grid;
+      grid-template-columns: 240px repeat(3, 1fr);
+      min-width: 880px;
+      transition: opacity 200ms var(--ease);
+    }
+    .matrix.is-fading { opacity: 0; }
+
+    /* matrix 헤더 row */
+    .matrix-head {
+      padding: 14px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-soft);
+      background: var(--bg-subtle);
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .matrix-head .stage-en {
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+    .matrix-head .stage-ko {
+      color: var(--text-secondary);
+      font-weight: 500;
+      font-size: 11.5px;
+      opacity: 0.8;
+    }
+    .matrix-head.head-r { background: var(--red-soft); }
+    .matrix-head.head-g { background: var(--green-soft); }
+    .matrix-head.head-b { background: var(--blue-soft); }
+    .matrix-head.head-r .stage-en { color: var(--red-text); }
+    .matrix-head.head-g .stage-en { color: var(--green-text); }
+    .matrix-head.head-b .stage-en { color: var(--blue-text); }
+
+    /* tier 그룹 배너 */
+    .tier-banner {
+      grid-column: 1 / -1;
+      padding: 14px 18px 10px;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      font-weight: 700;
+      background: var(--bg-page);
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .tier-banner.is-generalist {
+      background: var(--generalist-bg);
+      color: var(--generalist-text);
+      border-top: 2px solid var(--border-strong);
+    }
+
+    /* row label */
+    .row-label {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border-soft);
+      border-right: 1px solid var(--border-soft);
+      background: var(--bg-card);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .row-label .sector-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .row-label .sector-name {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+    .row-label .sector-tier {
+      display: inline-flex;
+      align-items: center;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: 0.03em;
+    }
+    .row-label .sector-tier.t1 { background: var(--tier1-bg); color: var(--tier1-text); }
+    .row-label .sector-tier.t2 { background: var(--tier2-bg); color: var(--tier2-text); }
+    .row-label .sector-tier.t3 { background: var(--tier3-bg); color: var(--tier3-text); }
+    .row-label .sector-tier.ts { background: var(--strategic-bg); color: var(--strategic-text); }
+    .row-label .sector-tier.tg { background: #FFF; color: var(--generalist-text); border: 1px solid var(--generalist-text); }
+
+    .row-label .critical-flag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: var(--crit-bg);
+      color: var(--crit-text);
+      border: 1px solid var(--crit-border);
+    }
+
+    .row-label .sector-note {
+      font-size: 11.5px;
+      color: var(--text-tertiary);
+      letter-spacing: -0.01em;
+    }
+    .row-label .sector-stats {
+      margin-top: 4px;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .row-label .sector-stats strong {
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    .row-label .sector-stats .sep { color: var(--border-strong); }
+
+    .row-label.is-generalist {
+      background: var(--generalist-bg);
+    }
+    .row-label.is-generalist .sector-name {
+      color: var(--generalist-text);
+    }
+
+    /* cell (R/G/B) */
+    .cell {
+      position: relative;
+      padding: 14px 14px 12px 18px;
+      border-bottom: 1px solid var(--border-soft);
+      border-right: 1px solid var(--border-soft);
+      background: var(--bg-card);
+      display: flex;
+      flex-direction: column;
+      min-height: 88px;
+    }
+    .cell:last-child { border-right: none; }
+    .cell::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: transparent;
+    }
+    .cell.cell-r::before { background: var(--red); }
+    .cell.cell-g::before { background: var(--green); }
+    .cell.cell-b::before { background: var(--blue); }
+
+    /* empty cell */
+    .cell.cell-empty {
+      padding: 12px;
+    }
+    .cell.cell-empty::before { display: none; }
+    .empty-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      border-radius: var(--radius-sm);
+      border: 1px dashed var(--warn-border);
+      background: var(--warn-bg);
+      color: var(--warn-text);
+      font-size: 11.5px;
+      font-weight: 600;
+      text-align: center;
+      padding: 12px;
+      letter-spacing: -0.01em;
+    }
+    .empty-box.is-critical {
+      border-color: var(--crit-border);
+      background: var(--crit-bg);
+      color: var(--crit-text);
+    }
+    .empty-box.is-soft {
+      border: 1px dashed var(--border-soft);
+      background: transparent;
+      color: var(--text-tertiary);
+      font-weight: 500;
+    }
+    .empty-box .empty-icon {
+      font-size: 13px;
+      opacity: 0.9;
+    }
+    .empty-box .empty-sub {
+      font-size: 10.5px;
+      font-weight: 400;
+      opacity: 0.85;
+    }
+
+    /* chips */
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+    .firm-chip {
+      display: inline-flex;
+      align-items: center;
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 4px 9px;
+      border-radius: 6px;
+      letter-spacing: -0.01em;
+      cursor: default;
+      transition: all var(--dur) var(--ease);
+      white-space: nowrap;
+      max-width: 100%;
+    }
+    .firm-chip.stage-r { background: var(--red-soft);   color: var(--red-text);   border: 1px solid var(--red-border); }
+    .firm-chip.stage-g { background: var(--green-soft); color: var(--green-text); border: 1px solid var(--green-border); }
+    .firm-chip.stage-b { background: var(--blue-soft);  color: var(--blue-text);  border: 1px solid var(--blue-border); }
+    .firm-chip:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-soft);
+      filter: brightness(0.97);
+    }
+    .firm-chip.is-empty {
+      background: var(--chip-empty-bg);
+      color: var(--chip-empty-text);
+      border-color: var(--chip-empty-border);
+      opacity: var(--chip-empty-opacity);
+    }
+    .firm-chip.is-empty:hover {
+      opacity: 1;
+      filter: none;
+      color: var(--text-primary);
+      background: #FFFFFF;
+      border-color: var(--border-strong);
+    }
+
+    /* =========================================================
+       5e. SECTOR DRY POWDER DISTRIBUTION (카드 그리드)
+       ========================================================= */
+    .distribution-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+      margin-bottom: 40px;
+    }
+    .dist-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      padding: 18px 20px 16px;
+      box-shadow: var(--shadow-soft);
+      transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease), border-color var(--dur) var(--ease);
+      display: flex;
+      flex-direction: column;
+    }
+    .dist-card:hover {
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-1px);
+    }
+    .dist-card.is-generalist {
+      background: var(--generalist-bg);
+      border-color: #DDD6FE;
+    }
+    .dist-card.is-critical {
+      border-color: var(--crit-border);
+      background: linear-gradient(180deg, #FFF 0%, #FFFAF9 100%);
+    }
+
+    .dist-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-soft);
+      margin-bottom: 14px;
+    }
+    .dist-card-header .header-left { min-width: 0; }
+    .dist-card-header .badges {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+    .dist-card-header .name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+      line-height: 1.3;
+    }
+    .dist-card.is-generalist .name { color: var(--generalist-text); }
+    .dist-card-header .total {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.025em;
+      white-space: nowrap;
+      line-height: 1.1;
+      padding-top: 2px;
+    }
+    .dist-card-header .total .unit {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-left: 1px;
+    }
+    .dist-card-header .total.is-zero {
+      color: var(--text-tertiary);
+    }
+
+    .dist-badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: 0.03em;
+    }
+    .dist-badge.t1 { background: var(--tier1-bg); color: var(--tier1-text); }
+    .dist-badge.t2 { background: var(--tier2-bg); color: var(--tier2-text); }
+    .dist-badge.t3 { background: var(--tier3-bg); color: var(--tier3-text); }
+    .dist-badge.ts { background: var(--strategic-bg); color: var(--strategic-text); }
+    .dist-badge.tg { background: #FFF; color: var(--generalist-text); border: 1px solid #DDD6FE; }
+
+    .dist-stages {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+    .dist-stage {
+      display: grid;
+      grid-template-columns: 16px 1fr 64px;
+      align-items: center;
+      gap: 10px;
+    }
+    .dist-stage .stage-key {
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0;
+      text-align: center;
+    }
+    .dist-stage.r .stage-key { color: var(--red-text); }
+    .dist-stage.g .stage-key { color: var(--green-text); }
+    .dist-stage.b .stage-key { color: var(--blue-text); }
+    .dist-stage .bar-track {
+      height: 8px;
+      background: var(--bg-subtle);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .dist-card.is-generalist .bar-track { background: #FFFFFF; }
+    .dist-stage .bar-fill {
+      height: 100%;
+      width: 0;
+      border-radius: 4px;
+      transition: width 700ms var(--ease);
+    }
+    .dist-stage.r .bar-fill { background: var(--red); }
+    .dist-stage.g .bar-fill { background: var(--green); }
+    .dist-stage.b .bar-fill { background: var(--blue); }
+    .dist-stage .amount {
+      font-size: 11.5px;
+      text-align: right;
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em;
+    }
+    .dist-stage .amount.is-zero {
+      color: var(--text-tertiary);
+      font-weight: 500;
+    }
+    .dist-stage .amount .unit {
+      font-size: 10.5px;
+      color: var(--text-tertiary);
+      font-weight: 500;
+      margin-left: 1px;
+    }
+
+    .dist-alert {
+      margin-top: 14px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 7px 10px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+    }
+    .dist-alert .icon { font-size: 12px; flex-shrink: 0; }
+    .dist-alert.partial {
+      background: var(--warn-bg);
+      color: var(--warn-text);
+      border: 1px solid var(--warn-border);
+    }
+    .dist-alert.critical {
+      background: var(--crit-bg);
+      color: var(--crit-text);
+      border: 1px solid var(--crit-border);
+    }
+    .dist-alert.soft {
+      background: transparent;
+      color: var(--text-tertiary);
+      border: 1px dashed var(--border-soft);
+      font-weight: 500;
+    }
+
+    /* 커스텀 툴팁 */
+    .custom-tip {
+      position: fixed;
+      pointer-events: none;
+      background: rgba(28, 25, 23, 0.96);
+      color: #FFFFFF;
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 8px 11px;
+      border-radius: 6px;
+      white-space: pre-line;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      opacity: 0;
+      transform: translateY(-2px);
+      transition: opacity 140ms var(--ease), transform 140ms var(--ease);
+      z-index: 9999;
+      max-width: min(340px, calc(100vw - 24px));
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    }
+    .custom-tip.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* dp bar */
+    .cell-meta {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .dp-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+    }
+    .dp-bar-track {
+      flex: 1;
+      height: 5px;
+      background: var(--bg-subtle);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .dp-bar-fill {
+      height: 100%;
+      width: 0;
+      border-radius: 3px;
+      transition: width 600ms var(--ease);
+    }
+    .cell-r .dp-bar-fill { background: var(--red); }
+    .cell-g .dp-bar-fill { background: var(--green); }
+    .cell-b .dp-bar-fill { background: var(--blue); }
+    .dp-amount {
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .dp-amount.is-zero {
+      color: var(--text-tertiary);
+      font-weight: 500;
+    }
+    .cell-summary {
+      font-size: 10.5px;
+      color: var(--text-tertiary);
+      letter-spacing: -0.01em;
+    }
+    .cell-summary strong { color: var(--text-secondary); font-weight: 600; }
+
+    /* =========================================================
+       6. 반응형
+       ========================================================= */
+    @media (max-width: 1024px) {
+      .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+      :root { --container-pad: 20px; }
+      .header-row { gap: 16px; }
+      .header-meta { gap: 18px; flex-wrap: wrap; }
+      .meta-item { text-align: left; }
+      .titles h1 { font-size: 19px; }
+      .kpi-value { font-size: 24px; }
+    }
+
+    @media (max-width: 520px) {
+      .kpi-row { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 480px) {
+      .logo { height: 22px; }
+      .logo-divider { display: none; }
+      .header-left { gap: 12px; }
+    }
+
+    /* =========================================================
+       6b. FOOTER
+       ========================================================= */
+    .site-footer {
+      border-top: 1px solid var(--border-soft);
+      padding: 22px 0 28px;
+      margin-top: 24px;
+      background: var(--bg-page);
+    }
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+      font-size: 11.5px;
+      color: var(--text-tertiary);
+      letter-spacing: -0.01em;
+      line-height: 1.55;
+    }
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+    .footer-brand {
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+    .footer-sep { color: var(--border-strong); }
+    .footer-note {
+      max-width: 520px;
+      text-align: right;
+    }
+    @media (max-width: 720px) {
+      .footer-note { text-align: left; }
+    }
+
+    /* =========================================================
+       7. 인쇄 (PDF 출력 호환)
+       ========================================================= */
+    @media print {
+      :root { --container-pad: 8mm; }
+      body {
+        background: #FFFFFF;
+        font-size: 10.5pt;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .container { max-width: 100%; }
+      .site-header { border-bottom-color: #CCCCCC; padding: 16px 0 12px; }
+
+      /* 인쇄 시 의미 없는 UI 숨김 */
+      .filter-bar,
+      .custom-tip,
+      .stage-note,
+      .actions-bar { display: none !important; }
+
+      /* 매트릭스 스크롤 해제 → 페이지 폭에 맞춤 */
+      .matrix-wrap { overflow: visible; border-radius: 0; }
+      .matrix { min-width: 0; }
+
+      /* 그림자/호버 효과 제거 */
+      .kpi-card,
+      .dist-card,
+      .matrix-wrap {
+        box-shadow: none !important;
+        transform: none !important;
+      }
+      .kpi-card:hover,
+      .dist-card:hover,
+      .firm-chip:hover {
+        transform: none !important;
+        box-shadow: none !important;
+        filter: none !important;
+      }
+
+      /* 페이지 분할 처리 */
+      section { break-inside: auto; }
+      .kpi-card,
+      .dist-card,
+      .row-label,
+      .cell,
+      .empty-box { break-inside: avoid; }
+      .matrix-head,
+      .tier-banner,
+      .dist-card-header,
+      .section-title-row { break-after: avoid; }
+
+      /* 페이지 여백 */
+      @page { margin: 12mm; }
+
+      /* DP 막대 즉시 채워진 상태로 */
+      .dp-bar-fill, .bar-fill {
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-row">
+      <div class="header-left">
+        <span class="logo" aria-label="dcamp">
+          <!-- 인라인 SVG: dcamp_Logo.svg -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 489.28 120" role="img" aria-label="dcamp logo">
+            <path
+              fill="#FF5E27"
+              d="M63,0v27.28c-6.51-4.59-14.44-7.28-23-7.28C17.91,20,0,37.91,0,60s17.91,40,40,40,40-17.91,40-40V0h-17ZM40,83c-12.7,0-23-10.3-23-23s10.3-23,23-23,23,10.3,23,23-10.3,23-23,23ZM396.28,56v44h-17v-44c0-10.63-8.62-19.25-19.25-19.25s-19.25,8.62-19.25,19.25v44h-17v-44c0-10.63-8.62-19.25-19.25-19.25s-19.25,8.62-19.25,19.25v44h-17v-44c0-20.02,16.23-36.25,36.25-36.25,11.14,0,21.1,5.02,27.75,12.93,6.65-7.91,16.61-12.93,27.75-12.93,20.02,0,36.25,16.23,36.25,36.25ZM215.28,20c-22.09,0-40,17.91-40,40s17.91,40,40,40c8.56,0,16.49-2.69,23-7.28v7.28h17v-40c0-22.09-17.91-40-40-40ZM215.28,83c-12.7,0-23-10.3-23-23s10.3-23,23-23,23,10.3,23,23-10.3,23-23,23ZM151.62,72c-4.04,6.6-11.31,11-19.62,11-12.7,0-23-10.3-23-23s10.3-23,23-23c8.31,0,15.59,4.4,19.62,11.01l16.16-5.89c-6.56-13.12-20.12-22.12-35.78-22.12-22.09,0-40,17.91-40,40s17.91,40,40,40c15.66,0,29.22-9,35.78-22.12l-16.15-5.88h-.01ZM449.28,20c-22.09,0-40,17.91-40,40v60h17v-27.28c6.51,4.59,14.44,7.28,23,7.28,22.09,0,40-17.91,40-40s-17.91-40-40-40ZM449.28,83c-12.7,0-23-10.3-23-23s10.3-23,23-23,23,10.3,23,23-10.3,23-23,23Z"
+            />
+          </svg>
+        </span>
+        <span class="logo-divider" aria-hidden="true"></span>
+        <div class="titles">
+          <h1>Sector &times; RGB Map</h1>
+          <p class="subtitle">디캠프 출자 펀드 드라이파우더 현황맵</p>
+        </div>
+      </div>
+
+      <div class="header-meta" id="header-meta" aria-label="대시보드 메타 정보">
+        <!-- JS로 채워짐 -->
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <div class="actions-bar" id="actions-bar" aria-label="추출">
+        <button class="action-btn" id="btn-pdf" type="button" title="PDF로 저장 (Ctrl+P → PDF로 저장)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 9V2h12v7"/>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+            <rect x="6" y="14" width="12" height="8"/>
+          </svg>
+          <span>PDF 저장</span>
+        </button>
+        <button class="action-btn" id="btn-pptx" type="button" title="PPTX 슬라이드로 저장">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="14" rx="2"/>
+            <path d="M8 21h8M12 17v4"/>
+          </svg>
+          <span>PPTX 저장</span>
+        </button>
+      </div>
+
+      <section aria-labelledby="kpi-title">
+        <div class="section-title-row">
+          <h2 id="kpi-title" class="section-title">단계별 드라이파우더 합계</h2>
+        </div>
+        <div class="kpi-row" id="kpi-row">
+          <!-- JS로 채워짐 -->
+        </div>
+      </section>
+
+      <section aria-labelledby="matrix-title">
+        <div class="section-title-row">
+          <h2 id="matrix-title" class="section-title">도메인별 드라이파우더 현황</h2>
+        </div>
+
+        <div class="filter-bar" role="tablist" aria-label="매트릭스 정렬 방식">
+          <span class="filter-label">정렬</span>
+          <button class="filter-btn active" role="tab" data-sort="tier" aria-selected="true">Tier 그룹순</button>
+          <button class="filter-btn" role="tab" data-sort="dp" aria-selected="false">드라이파우더 많은 순</button>
+        </div>
+
+        <div class="matrix-wrap">
+          <div class="matrix" id="matrix">
+            <!-- JS로 채워짐 -->
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="dist-title">
+        <div class="section-title-row">
+          <h2 id="dist-title" class="section-title">도메인별 드라이파우더 현황(요약)</h2>
+        </div>
+        <div class="distribution-grid" id="dist-grid">
+          <!-- JS로 채워짐 -->
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+
+  <div id="chip-tooltip" class="custom-tip" role="tooltip" aria-hidden="true"></div>
+
+  <script>
+    /* =========================================================
+       데이터 (dashboard_data.json 인라인)
+       ========================================================= */
+    const DATA = {
+  "meta": {
+    "as_of": "2026-04-30",
+    "description": "디캠프 출자 펀드 — 섹터 × R/G/B 단계별 운용사 분포 및 드라이파우더",
+    "classification": {
+      "specialist_threshold": "스페셜리스트 펀드의 섹터 매핑은 weight ≥ 14.0% 이상인 경우만 포함",
+      "generalist_rule": "13개 도메인에 5~10% 사이로 균등 분배된 펀드는 제너럴리스트로 분류, 별도 섹션에 표시"
+    },
+    "source": "dcamp_rawdata_templatev3.xlsx · 운용사_펀드"
+  },
+  "kpi": {
+    "total_funds": 36,
+    "specialist_funds": 24,
+    "generalist_funds": 12,
+    "total_firms": 32,
+    "firms_with_dp": 20,
+    "firms_without_dp": 12,
+    "total_dp_eok": 1208.4,
+    "funds_with_dp": 22,
+    "funds_without_dp": 14,
+    "as_of": "2026-04-30",
+    "by_stage": {
+      "R": {
+        "fund_count": 16,
+        "firm_count": 14,
+        "dp": 370.9
+      },
+      "G": {
+        "fund_count": 16,
+        "firm_count": 14,
+        "dp": 659.5
+      },
+      "B": {
+        "fund_count": 4,
+        "firm_count": 4,
+        "dp": 178.0
+      }
+    }
+  },
+  "sectors": {
+    "반도체": {
+      "tier": "Tier 1",
+      "order": 1,
+      "note": "공정·설계·소부장",
+      "R": {
+        "firms": [
+          {
+            "name": "카카오벤처스",
+            "dp": 22.5,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "스타트업코리아 카카오 코파일럿 펀드",
+                "dp": 22.5
+              }
+            ]
+          }
+        ],
+        "fund_count": 1,
+        "firm_count": 1,
+        "firms_with_dp": 1,
+        "dp": 22.5
+      },
+      "G": {
+        "firms": [
+          {
+            "name": "스틱벤처스",
+            "dp": 8.8,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "스타트업코리아IBK-스틱테크챔피언펀드",
+                "dp": 8.8
+              }
+            ]
+          },
+          {
+            "name": "에이벤처스",
+            "dp": 60.1,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "에이벤처스 AX 유니콘 투자조합",
+                "dp": 60.1
+              }
+            ]
+          },
+          {
+            "name": "엘앤에스벤처캐피탈",
+            "dp": 60.0,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "엘앤에스 K-Semi 르네상스 투자조합",
+                "dp": 60.0
+              }
+            ]
+          },
+          {
+            "name": "퀀텀벤처스코리아",
+            "dp": 33.4,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "퀀텀-KIF 12호 AI 펀드",
+                "dp": 33.4
+              }
+            ]
+          }
+        ],
+        "fund_count": 4,
+        "firm_count": 4,
+        "firms_with_dp": 4,
+        "dp": 162.3
+      },
+      "B": {
+        "firms": [
+          {
+            "name": "신한벤처투자",
+            "dp": 16.6,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "스타트업 코리아 비전 2024 펀드",
+                "dp": 16.6
+              }
+            ]
+          }
+        ],
+        "fund_count": 1,
+        "firm_count": 1,
+        "firms_with_dp": 1,
+        "dp": 16.6
+      },
+      "total_dp": 201.4,
+      "total_firms": 6
+    },
+    "우주·항공·방산": {
+      "tier": "Tier 1",
+      "order": 2,
+      "note": "우주·항공·방산",
+      "R": {
+        "firms": [],
+        "fund_count": 0,
+        "firm_count": 0,
+        "firms_with_dp": 0,
+        "dp": 0
+      },
+      "G": {
+        "firms": [],
+        "fund_count": 0,
+        "firm_count": 0,
+        "firms_with_dp": 0,
+        "dp": 0
+      },
+      "B": {
+        "firms": [
+          {
+            "name": "컴퍼니케이파트너스",
+            "dp": 2.5,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "컴퍼니케이뉴스페이스펀드",
+                "dp": 2.5
+              }
+            ]
+          }
+        ],
+        "fund_count": 1,
+        "firm_count": 1,
+        "firms_with_dp": 1,
+        "dp": 2.5
+      },
+      "total_dp": 2.5,
+      "total_firms": 1
+    },
+    "신재생에너지": {
+      "tier": "Tier 1",
+      "order": 3,
+      "note": "에너지 전환",
+      "R": {
+        "firms": [
+          {
+            "name": "캡스톤파트너스",
+            "dp": 34.2,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "성장금융 캡스톤 2025 딥테크 디캠프 투자조합",
+                "dp": 34.2
+              }
+            ]
+          },
+          {
+            "name": "퓨처플레이",
+            "dp": 0.0,
+            "fund_count": 1,
+            "has_dp": false,
+            "funds": [
+              {
+                "name": "스타트업 코리아 IBKVC-FP 2024 펀드",
+                "dp": 0.0
+              }
+            ]
+          }
+        ],
+        "fund_count": 2,
+        "firm_count": 2,
+        "firms_with_dp": 1,
+        "dp": 34.2
+      },
+      "G": {
+        "firms": [
+          {
+            "name": "스틱벤처스",
+            "dp": 8.8,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "스타트업코리아IBK-스틱테크챔피언펀드",
+                "dp": 8.8
+              }
+            ]
+          },
+          {
+            "name": "아이엠투자파트너스",
+            "dp": 45.0,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "아이엠-에스제이 세이브어스 벤처펀드",
+                "dp": 45.0
+              }
+            ]
+          },
+          {
+            "name": "에이스톤벤처스",
+            "dp": 7.5,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "2024 에이스톤 미래환경 투자조합",
+                "dp": 7.5
+              }
+            ]
+          },
+          {
+            "name": "인터밸류파트너스",
+            "dp": 33.4,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "인터밸류8호 딥테크 창업기업 투자조합",
+                "dp": 33.4
+              }
+            ]
+          }
+        ],
+        "fund_count": 4,
+        "firm_count": 4,
+        "firms_with_dp": 4,
+        "dp": 94.7
+      },
+      "B": {
+        "firms": [
+          {
+            "name": "신한벤처투자",
+            "dp": 16.7,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "스타트업 코리아 비전 2024 펀드",
+                "dp": 16.7
+              }
+            ]
+          }
+        ],
+        "fund_count": 1,
+        "firm_count": 1,
+        "firms_with_dp": 1,
+        "dp": 16.7
+      },
+      "total_dp": 145.6,
+      "total_firms": 7
+    },
+    "플랫폼": {
+      "tier": "Tier 1",
+      "order": 4,
+      "note": "플랫폼/소프트웨어",
+      "R": {
+        "firms": [
+          {
+            "name": "Krew Capital",
+            "dp": 42.0,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "Krew Capital Venture Fund I",
+                "dp": 42.0
+              }
+            ]
+          },
+          {
+            "name": "라구나인베스트먼트",
+            "dp": 45.0,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "라구나 문화신기술 펀드 제7호",
+                "dp": 45.0
+              }
+            ]
+          },
+          {
+            "name": "카카오벤처스",
+            "dp": 22.5,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "스타트업코리아 카카오 코파일럿 펀드",
+                "dp": 22.5
+              }
+            ]
+          },
+          {
+            "name": "캡스톤파트너스",
+            "dp": 0.0,
+            "fund_count": 1,
+            "has_dp": false,
+            "funds": [
+              {
+                "name": "캡스톤2020성장지원투자조합",
+                "dp": 0.0
+              }
+            ]
+          },
+          {
+            "name": "크릿벤처스",
+            "dp": 0.0,
+            "fund_count": 1,
+            "has_dp": false,
+            "funds": [
+              {
+                "name": "영프론트원 크릿 메타버스 펀드",
+                "dp": 0.0
+              }
+            ]
+          },
+          {
+            "name": "트랜스링크인베스트먼트",
+            "dp": 13.8,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "트랜스링크-DAY1 투자조합V",
+                "dp": 13.8
+              }
+            ]
+          }
+        ],
+        "fund_count": 6,
+        "firm_count": 6,
+        "firms_with_dp": 4,
+        "dp": 123.3
+      },
+      "G": {
+        "firms": [
+          {
+            "name": "에이벤처스",
+            "dp": 59.9,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "에이벤처스 AX 유니콘 투자조합",
+                "dp": 59.9
+              }
+            ]
+          },
+          {
+            "name": "퀀텀벤처스코리아",
+            "dp": 33.3,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "퀀텀-KIF 12호 AI 펀드",
+                "dp": 33.3
+              }
+            ]
+          }
+        ],
+        "fund_count": 2,
+        "firm_count": 2,
+        "firms_with_dp": 2,
+        "dp": 93.2
+      },
+      "B": {
+        "firms": [
+          {
+            "name": "스마일게이트인베스트먼트",
+            "dp": 12.8,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "스마일게이트로켓부스터3호",
+                "dp": 12.8
+              }
+            ]
+          },
+          {
+            "name": "아이엠엠인베스트먼트",
+            "dp": 100.0,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "아이엠엠 스타트업 벤처펀드 제2호",
+                "dp": 100.0
+              }
+            ]
+          }
+        ],
+        "fund_count": 2,
+        "firm_count": 2,
+        "firms_with_dp": 2,
+        "dp": 112.8
+      },
+      "total_dp": 329.3,
+      "total_firms": 10
+    },
+    "배터리(이차전지)": {
+      "tier": "Tier 2",
+      "order": 5,
+      "note": "배터리/소재",
+      "R": {
+        "firms": [],
+        "fund_count": 0,
+        "firm_count": 0,
+        "firms_with_dp": 0,
+        "dp": 0
+      },
+      "G": {
+        "firms": [
+          {
+            "name": "에이스톤벤처스",
+            "dp": 7.5,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "2024 에이스톤 미래환경 투자조합",
+                "dp": 7.5
+              }
+            ]
+          }
+        ],
+        "fund_count": 1,
+        "firm_count": 1,
+        "firms_with_dp": 1,
+        "dp": 7.5
+      },
+      "B": {
+        "firms": [],
+        "fund_count": 0,
+        "firm_count": 0,
+        "firms_with_dp": 0,
+        "dp": 0
+      },
+      "total_dp": 7.5,
+      "total_firms": 1
+    },
+    "로봇": {
+      "tier": "Tier 2",
+      "order": 6,
+      "note": "로보틱스",
+      "R": {
+        "firms": [
+          {
+            "name": "카카오벤처스",
+            "dp": 22.5,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "스타트업코리아 카카오 코파일럿 펀드",
+                "dp": 22.5
+              }
+            ]
+          }
+        ],
+        "fund_count": 1,
+        "firm_count": 1,
+        "firms_with_dp": 1,
+        "dp": 22.5
+      },
+      "G": {
+        "firms": [
+          {
+            "name": "스틱벤처스",
+            "dp": 8.8,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "스타트업코리아IBK-스틱테크챔피언펀드",
+                "dp": 8.8
+              }
+            ]
+          }
+        ],
+        "fund_count": 1,
+        "firm_count": 1,
+        "firms_with_dp": 1,
+        "dp": 8.8
+      },
+      "B": {
+        "firms": [],
+        "fund_count": 0,
+        "firm_count": 0,
+        "firms_with_dp": 0,
+        "dp": 0
+      },
+      "total_dp": 31.3,
+      "total_firms": 2
+    },
+    "기계장치": {
+      "tier": "Tier 2",
+      "order": 7,
+      "note": "산업장비",
+      "R": {
+        "firms": [
+          {
+            "name": "인라이트벤처스",
+            "dp": 0.0,
+            "fund_count": 1,
+            "has_dp": false,
+            "funds": [
+              {
+                "name": "아이비케이 디캠프 IP기술사업화 KIAMCO인라이트 펀드",
+                "dp": 0.0
+              }
+            ]
+          },
+          {
+            "name": "캡스톤파트너스",
+            "dp": 34.1,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "성장금융 캡스톤 2025 딥테크 디캠프 투자조합",
+                "dp": 34.1
+              }
+            ]
+          },
+          {
+            "name": "트랜스링크인베스트먼트",
+            "dp": 13.8,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "트랜스링크-DAY1 투자조합V",
+                "dp": 13.8
+              }
+            ]
+          },
+          {
+            "name": "퓨처플레이",
+            "dp": 0.0,
+            "fund_count": 1,
+            "has_dp": false,
+            "funds": [
+              {
+                "name": "스타트업 코리아 IBKVC-FP 2024 펀드",
+                "dp": 0.0
+              }
+            ]
+          }
+        ],
+        "fund_count": 4,
+        "firm_count": 4,
+        "firms_with_dp": 2,
+        "dp": 47.9
+      },
+      "G": {
+        "firms": [
+          {
+            "name": "에이벤처스",
+            "dp": 59.9,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "에이벤처스 AX 유니콘 투자조합",
+                "dp": 59.9
+              }
+            ]
+          },
+          {
+            "name": "인터밸류파트너스",
+            "dp": 33.3,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "인터밸류8호 딥테크 창업기업 투자조합",
+                "dp": 33.3
+              }
+            ]
+          },
+          {
+            "name": "퀀텀벤처스코리아",
+            "dp": 12.5,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "케이디비 퀀텀 모빌리티 밸류체인 오픈이노베이션펀드",
+                "dp": 12.5
+              }
+            ]
+          }
+        ],
+        "fund_count": 3,
+        "firm_count": 3,
+        "firms_with_dp": 3,
+        "dp": 105.7
+      },
+      "B": {
+        "firms": [],
+        "fund_count": 0,
+        "firm_count": 0,
+        "firms_with_dp": 0,
+        "dp": 0
+      },
+      "total_dp": 153.6,
+      "total_firms": 7
+    },
+    "물류": {
+      "tier": "Tier 2",
+      "order": 8,
+      "note": "물류/공급망",
+      "R": {
+        "firms": [
+          {
+            "name": "퓨처플레이",
+            "dp": 0.0,
+            "fund_count": 1,
+            "has_dp": false,
+            "funds": [
+              {
+                "name": "스타트업 코리아 IBKVC-FP 2024 펀드",
+                "dp": 0.0
+              }
+            ]
+          }
+        ],
+        "fund_count": 1,
+        "firm_count": 1,
+        "firms_with_dp": 0,
+        "dp": 0.0
+      },
+      "G": {
+        "firms": [],
+        "fund_count": 0,
+        "firm_count": 0,
+        "firms_with_dp": 0,
+        "dp": 0
+      },
+      "B": {
+        "firms": [],
+        "fund_count": 0,
+        "firm_count": 0,
+        "firms_with_dp": 0,
+        "dp": 0
+      },
+      "total_dp": 0.0,
+      "total_firms": 1
+    },
+    "모빌리티": {
+      "tier": "Tier 3",
+      "order": 9,
+      "note": "이동수단/운송",
+      "R": {
+        "firms": [],
+        "fund_count": 0,
+        "firm_count": 0,
+        "firms_with_dp": 0,
+        "dp": 0
+      },
+      "G": {
+        "firms": [
+          {
+            "name": "스틱벤처스",
+            "dp": 8.8,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "스타트업코리아IBK-스틱테크챔피언펀드",
+                "dp": 8.8
+              }
+            ]
+          },
+          {
+            "name": "에이스톤벤처스",
+            "dp": 7.5,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "2024 에이스톤 미래환경 투자조합",
+                "dp": 7.5
+              }
+            ]
+          },
+          {
+            "name": "퀀텀벤처스코리아",
+            "dp": 12.5,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "케이디비 퀀텀 모빌리티 밸류체인 오픈이노베이션펀드",
+                "dp": 12.5
+              }
+            ]
+          }
+        ],
+        "fund_count": 3,
+        "firm_count": 3,
+        "firms_with_dp": 3,
+        "dp": 28.8
+      },
+      "B": {
+        "firms": [],
+        "fund_count": 0,
+        "firm_count": 0,
+        "firms_with_dp": 0,
+        "dp": 0
+      },
+      "total_dp": 28.8,
+      "total_firms": 3
+    },
+    "탄소저감·관리": {
+      "tier": "Tier 3",
+      "order": 10,
+      "note": "탄소 감축/관리",
+      "R": {
+        "firms": [
+          {
+            "name": "캡스톤파트너스",
+            "dp": 34.1,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "성장금융 캡스톤 2025 딥테크 디캠프 투자조합",
+                "dp": 34.1
+              }
+            ]
+          }
+        ],
+        "fund_count": 1,
+        "firm_count": 1,
+        "firms_with_dp": 1,
+        "dp": 34.1
+      },
+      "G": {
+        "firms": [
+          {
+            "name": "아이엠투자파트너스",
+            "dp": 45.0,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "아이엠-에스제이 세이브어스 벤처펀드",
+                "dp": 45.0
+              }
+            ]
+          },
+          {
+            "name": "에이스톤벤처스",
+            "dp": 7.5,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "2024 에이스톤 미래환경 투자조합",
+                "dp": 7.5
+              }
+            ]
+          },
+          {
+            "name": "인터밸류파트너스",
+            "dp": 33.3,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "인터밸류8호 딥테크 창업기업 투자조합",
+                "dp": 33.3
+              }
+            ]
+          }
+        ],
+        "fund_count": 3,
+        "firm_count": 3,
+        "firms_with_dp": 3,
+        "dp": 85.8
+      },
+      "B": {
+        "firms": [
+          {
+            "name": "스마일게이트인베스트먼트",
+            "dp": 12.8,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "스마일게이트로켓부스터3호",
+                "dp": 12.8
+              }
+            ]
+          }
+        ],
+        "fund_count": 1,
+        "firm_count": 1,
+        "firms_with_dp": 1,
+        "dp": 12.8
+      },
+      "total_dp": 132.7,
+      "total_firms": 5
+    },
+    "의료기기": {
+      "tier": "Tier 3",
+      "order": 11,
+      "note": "메드테크",
+      "R": {
+        "firms": [
+          {
+            "name": "카카오벤처스",
+            "dp": 22.5,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "스타트업코리아 카카오 코파일럿 펀드",
+                "dp": 22.5
+              }
+            ]
+          }
+        ],
+        "fund_count": 1,
+        "firm_count": 1,
+        "firms_with_dp": 1,
+        "dp": 22.5
+      },
+      "G": {
+        "firms": [],
+        "fund_count": 0,
+        "firm_count": 0,
+        "firms_with_dp": 0,
+        "dp": 0
+      },
+      "B": {
+        "firms": [
+          {
+            "name": "신한벤처투자",
+            "dp": 16.6,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "스타트업 코리아 비전 2024 펀드",
+                "dp": 16.6
+              }
+            ]
+          }
+        ],
+        "fund_count": 1,
+        "firm_count": 1,
+        "firms_with_dp": 1,
+        "dp": 16.6
+      },
+      "total_dp": 39.1,
+      "total_firms": 2
+    },
+    "패션·뷰티": {
+      "tier": "Tier 3",
+      "order": 12,
+      "note": "패션/뷰티",
+      "R": {
+        "firms": [],
+        "fund_count": 0,
+        "firm_count": 0,
+        "firms_with_dp": 0,
+        "dp": 0
+      },
+      "G": {
+        "firms": [],
+        "fund_count": 0,
+        "firm_count": 0,
+        "firms_with_dp": 0,
+        "dp": 0
+      },
+      "B": {
+        "firms": [],
+        "fund_count": 0,
+        "firm_count": 0,
+        "firms_with_dp": 0,
+        "dp": 0
+      },
+      "total_dp": 0,
+      "total_firms": 0
+    },
+    "사이버보안": {
+      "tier": "Strategic",
+      "order": 13,
+      "note": "전략적 추가",
+      "R": {
+        "firms": [],
+        "fund_count": 0,
+        "firm_count": 0,
+        "firms_with_dp": 0,
+        "dp": 0
+      },
+      "G": {
+        "firms": [
+          {
+            "name": "DG Daiwa ventures",
+            "dp": 28.5,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "DGDV Fund Ⅲ E.L.P. Cayman",
+                "dp": 28.5
+              }
+            ]
+          },
+          {
+            "name": "퀀텀벤처스코리아",
+            "dp": 33.3,
+            "fund_count": 1,
+            "has_dp": true,
+            "funds": [
+              {
+                "name": "퀀텀-KIF 12호 AI 펀드",
+                "dp": 33.3
+              }
+            ]
+          }
+        ],
+        "fund_count": 2,
+        "firm_count": 2,
+        "firms_with_dp": 2,
+        "dp": 61.8
+      },
+      "B": {
+        "firms": [],
+        "fund_count": 0,
+        "firm_count": 0,
+        "firms_with_dp": 0,
+        "dp": 0
+      },
+      "total_dp": 61.8,
+      "total_firms": 2
+    }
+  },
+  "generalist": {
+    "tier": "Generalist",
+    "order": 99,
+    "note": "전 섹터 균등 분산 출자 펀드 — 디캠프 패밀리 VC 전반 커버",
+    "R": {
+      "firms": [
+        {
+          "name": "롯데벤처스",
+          "dp": 14.9,
+          "fund_count": 1,
+          "has_dp": true,
+          "funds": [
+            {
+              "name": "롯데-FRONT1 스타트업 펀드",
+              "dp": 14.9
+            }
+          ]
+        },
+        {
+          "name": "베이스벤처스",
+          "dp": 40.0,
+          "fund_count": 1,
+          "has_dp": true,
+          "funds": [
+            {
+              "name": "베이스업템포벤처투자조합",
+              "dp": 40.0
+            }
+          ]
+        },
+        {
+          "name": "본엔젤스파트너스",
+          "dp": 0.0,
+          "fund_count": 1,
+          "has_dp": false,
+          "funds": [
+            {
+              "name": "Guardian ScaleUp Fund A, B",
+              "dp": 0.0
+            }
+          ]
+        },
+        {
+          "name": "어센도벤처스",
+          "dp": 0.0,
+          "fund_count": 1,
+          "has_dp": false,
+          "funds": [
+            {
+              "name": "스마트 어센도 그린뉴딜 투자조합",
+              "dp": 0.0
+            }
+          ]
+        },
+        {
+          "name": "캡스톤파트너스",
+          "dp": 9.0,
+          "fund_count": 1,
+          "has_dp": true,
+          "funds": [
+            {
+              "name": "캡스톤 스케일업 투자조합",
+              "dp": 9.0
+            }
+          ]
+        }
+      ],
+      "fund_count": 5,
+      "firm_count": 5,
+      "firms_with_dp": 3,
+      "dp": 63.9
+    },
+    "G": {
+      "firms": [
+        {
+          "name": "뮤렉스파트너스",
+          "dp": 0.0,
+          "fund_count": 1,
+          "has_dp": false,
+          "funds": [
+            {
+              "name": "뮤렉스퍼플2호어반테크투자조합",
+              "dp": 0.0
+            }
+          ]
+        },
+        {
+          "name": "에스제이투자파트너스",
+          "dp": 0.0,
+          "fund_count": 1,
+          "has_dp": false,
+          "funds": [
+            {
+              "name": "에스제이 퍼스트무버 벤처펀드 제2호",
+              "dp": 0.0
+            }
+          ]
+        },
+        {
+          "name": "에이스톤벤처스",
+          "dp": 0.0,
+          "fund_count": 1,
+          "has_dp": false,
+          "funds": [
+            {
+              "name": "2021 에이스톤 일자리 투자조합",
+              "dp": 0.0
+            }
+          ]
+        },
+        {
+          "name": "위벤처스",
+          "dp": 0.0,
+          "fund_count": 1,
+          "has_dp": false,
+          "funds": [
+            {
+              "name": "We일자리펀드 1호",
+              "dp": 0.0
+            }
+          ]
+        },
+        {
+          "name": "제피러스랩",
+          "dp": 11.0,
+          "fund_count": 1,
+          "has_dp": true,
+          "funds": [
+            {
+              "name": "하나-제피러스 프론트원 스타트업 펀드",
+              "dp": 11.0
+            }
+          ]
+        },
+        {
+          "name": "코메스인베스트먼트",
+          "dp": 0.0,
+          "fund_count": 1,
+          "has_dp": false,
+          "funds": [
+            {
+              "name": "코메스2021-1일자리창출투자조합",
+              "dp": 0.0
+            }
+          ]
+        },
+        {
+          "name": "현대투자파트너스",
+          "dp": 0.0,
+          "fund_count": 1,
+          "has_dp": false,
+          "funds": [
+            {
+              "name": "현대일자리창출펀드1호",
+              "dp": 0.0
+            }
+          ]
+        }
+      ],
+      "fund_count": 7,
+      "firm_count": 7,
+      "firms_with_dp": 1,
+      "dp": 11.0
+    },
+    "B": {
+      "firms": [],
+      "fund_count": 0,
+      "firm_count": 0,
+      "firms_with_dp": 0,
+      "dp": 0
+    },
+    "total_dp": 74.9,
+    "total_firms": 12
+  }
+};
+
+    /* =========================================================
+       유틸
+       ========================================================= */
+    const fmt = {
+      // 1101 -> "1,101"
+      thousand(n) { return Math.round(n).toLocaleString('ko-KR'); },
+      // 2026-03-31 -> "2026.03.31"
+      date(s)     { return s.replace(/-/g, '.'); }
+    };
+
+    /* =========================================================
+       헤더 메타 렌더
+       ========================================================= */
+    function renderHeaderMeta() {
+      const el = document.getElementById('header-meta');
+      const asOf         = fmt.date(DATA.meta.as_of);
+      const totalDp      = fmt.thousand(DATA.kpi.total_dp_eok);
+      const totalFunds   = DATA.kpi.total_funds;
+      const firmsWithDp  = DATA.kpi.firms_with_dp;
+      const totalFirms   = DATA.kpi.total_firms;
+
+      el.innerHTML = `
+        <div class="meta-item">
+          <div class="meta-label">기준일</div>
+          <div class="meta-value">${asOf}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">총 드라이파우더</div>
+          <div class="meta-value"><strong>${totalDp}</strong><span class="unit">억</span></div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">총 펀드</div>
+          <div class="meta-value"><strong>${totalFunds}</strong><span class="unit">개</span></div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">DP 보유 운용사</div>
+          <div class="meta-value"><strong>${firmsWithDp}개</strong><span class="unit"> / ${totalFirms}개</span></div>
+        </div>
+      `;
+    }
+
+    /* =========================================================
+       KPI ROW 렌더 (R / G / B / 전체)
+       ========================================================= */
+    function renderKpiRow() {
+      const root = document.getElementById('kpi-row');
+
+      const stages = [
+        { key: 'R', cls: 'kpi-r', en: 'Red',   ko: 'Seed~Series A' },
+        { key: 'G', cls: 'kpi-g', en: 'Green', ko: 'Series B 내외' },
+        { key: 'B', cls: 'kpi-b', en: 'Blue',  ko: 'Series C+' }
+      ];
+
+      const stageCards = stages.map(s => {
+        const d = DATA.kpi.by_stage[s.key];
+        return `
+          <article class="kpi-card ${s.cls}" aria-label="${s.en} 드라이파우더">
+            <span class="kpi-tag">
+              <span class="dot" aria-hidden="true"></span>
+              <span class="stage-en">${s.en}</span>
+              <span class="stage-ko">· ${s.ko}</span>
+            </span>
+            <div class="kpi-value">${fmt.thousand(d.dp)}<span class="unit">억</span></div>
+            <div class="kpi-meta">
+              <span class="piece">운용사 <strong>${d.firm_count}</strong>개</span>
+              <span class="sep">·</span>
+              <span class="piece">펀드 <strong>${d.fund_count}</strong>개</span>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      const totalCard = `
+        <article class="kpi-card kpi-total" aria-label="전체 드라이파우더">
+          <span class="kpi-tag">
+            <span class="dot" aria-hidden="true"></span>
+            <span class="stage-en">Total</span>
+            <span class="stage-ko">· 전체</span>
+          </span>
+          <div class="kpi-value">${fmt.thousand(DATA.kpi.total_dp_eok)}<span class="unit">억</span></div>
+          <div class="kpi-meta">
+            <span class="piece">DP 보유 운용사 <strong>${DATA.kpi.firms_with_dp}개</strong> / ${DATA.kpi.total_firms}개</span>
+            <span class="sep">·</span>
+            <span class="piece">총 펀드 <strong>${DATA.kpi.total_funds}</strong>개</span>
+          </div>
+        </article>
+      `;
+
+      root.innerHTML = stageCards + totalCard;
+    }
+
+    /* =========================================================
+       MATRIX 렌더
+       ========================================================= */
+    let sortMode = 'tier'; // 'tier' | 'dp'
+    const DP_MAX = 162.3;  // 셀 단위 DP 최댓값 (반도체 G)
+
+    const TIER_GROUPS = [
+      { key: 'Tier 1',    label: 'TIER 1' },
+      { key: 'Tier 2',    label: 'TIER 2' },
+      { key: 'Tier 3',    label: 'TIER 3' },
+      { key: 'Strategic', label: 'STRATEGIC' }
+    ];
+
+    const TIER_CLS = {
+      'Tier 1': 't1', 'Tier 2': 't2', 'Tier 3': 't3',
+      'Strategic': 'ts', 'Generalist': 'tg'
+    };
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+
+    function fmtDp(n) {
+      if (!n) return '0';
+      if (n >= 100) return Math.round(n).toLocaleString('ko-KR');
+      return n.toFixed(1);
+    }
+
+    // 칩 정렬: DP 보유 우선 → DP 큰 순 → 가나다순
+    function sortFirms(firms) {
+      return [...firms].sort((a, b) => {
+        if (a.has_dp !== b.has_dp) return a.has_dp ? -1 : 1;
+        if (b.dp !== a.dp) return b.dp - a.dp;
+        return a.name.localeCompare(b.name, 'ko');
+      });
+    }
+
+    function renderChip(firm, stageKey) {
+      const dpText = firm.has_dp ? `DP ${fmtDp(firm.dp)}억` : 'DP 없음';
+      let tooltip = `${firm.name} · ${dpText} · 펀드 ${firm.fund_count}개`;
+      if (Array.isArray(firm.funds) && firm.funds.length > 0) {
+        const lines = firm.funds.map(f => {
+          const fdp = (f.dp && f.dp > 0) ? ` (DP ${fmtDp(f.dp)}억)` : '';
+          return `└ ${f.name}${fdp}`;
+        });
+        tooltip += '\n' + lines.join('\n');
+      }
+      const cls = `firm-chip stage-${stageKey.toLowerCase()}` + (firm.has_dp ? '' : ' is-empty');
+      return `<span class="${cls}" data-tip="${escapeHtml(tooltip)}">${escapeHtml(firm.name)}</span>`;
+    }
+
+    function renderEmptyCell(stageKey, mode) {
+      // mode: 'critical' | 'partial' | 'soft'
+      let cls = 'empty-box', label = '출자 없음', sub = '', icon = '⚠';
+      if (mode === 'critical') {
+        cls += ' is-critical';
+        label = '긴급 출자 필요';
+        sub = '전 단계 공백';
+      } else if (mode === 'soft') {
+        cls += ' is-soft';
+        label = '—';
+        icon = '';
+      }
+      return `
+        <div class="cell cell-empty">
+          <div class="${cls}">
+            ${icon ? `<span class="empty-icon" aria-hidden="true">${icon}</span>` : ''}
+            <span>${label}</span>
+            ${sub ? `<span class="empty-sub">${sub}</span>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCell(stageKey, stageData, isFullEmptyRow, isGeneralist) {
+      if (stageData.firm_count === 0) {
+        return renderEmptyCell(stageKey, 'partial');
+      }
+
+      const firms = sortFirms(stageData.firms);
+      const chips = firms.map(f => renderChip(f, stageKey)).join('');
+
+      const dpRow = stageData.dp > 0
+        ? `
+          <div class="dp-row">
+            <div class="dp-bar-track">
+              <div class="dp-bar-fill" data-target="${Math.min((stageData.dp / DP_MAX) * 100, 100).toFixed(1)}"></div>
+            </div>
+            <span class="dp-amount">${fmtDp(stageData.dp)}억</span>
+          </div>
+        `
+        : '';
+
+      const summary = `
+        <div class="cell-summary">
+          운용사 <strong>${stageData.firm_count}</strong>개
+          ${stageData.firms_with_dp < stageData.firm_count
+            ? ` · DP 보유 <strong>${stageData.firms_with_dp}</strong>개`
+            : ''}
+        </div>
+      `;
+
+      return `
+        <div class="cell cell-${stageKey.toLowerCase()}">
+          <div class="chips">${chips}</div>
+          <div class="cell-meta">
+            ${dpRow}
+            ${summary}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderRow(name, sector, opts = {}) {
+      const isGeneralist = !!opts.isGeneralist;
+      const isFullEmpty = !isGeneralist
+        && sector.R.firm_count === 0
+        && sector.G.firm_count === 0
+        && sector.B.firm_count === 0;
+
+      const tierKey = isGeneralist ? 'Generalist' : sector.tier;
+      const tierLabel = isGeneralist ? 'Generalist' : sector.tier;
+      const labelCls = 'row-label' + (isGeneralist ? ' is-generalist' : '');
+
+      const labelHtml = `
+        <div class="${labelCls}">
+          <div class="sector-top">
+            <span class="sector-name">${escapeHtml(name)}</span>
+            <span class="sector-tier ${TIER_CLS[tierKey]}">${tierLabel}</span>
+          </div>
+          <div class="sector-stats">
+            <span>DP <strong>${fmtDp(sector.total_dp)}</strong>억</span>
+            <span class="sep">·</span>
+            <span>운용사 <strong>${sector.total_firms || 0}</strong>개</span>
+          </div>
+        </div>
+      `;
+
+      const cells = ['R', 'G', 'B']
+        .map(s => renderCell(s, sector[s], isFullEmpty, isGeneralist))
+        .join('');
+
+      return labelHtml + cells;
+    }
+
+    function renderMatrixHeader() {
+      return `
+        <div class="matrix-head">도메인</div>
+        <div class="matrix-head head-r"><span class="stage-en">Red</span><span class="stage-ko">· Seed~Series A</span></div>
+        <div class="matrix-head head-g"><span class="stage-en">Green</span><span class="stage-ko">· Series B 내외</span></div>
+        <div class="matrix-head head-b"><span class="stage-en">Blue</span><span class="stage-ko">· Series C+</span></div>
+      `;
+    }
+
+    function renderMatrix() {
+      const root = document.getElementById('matrix');
+      let html = renderMatrixHeader();
+
+      const entries = Object.entries(DATA.sectors);
+
+      if (sortMode === 'tier') {
+        TIER_GROUPS.forEach(g => {
+          const list = entries
+            .filter(([, s]) => s.tier === g.key)
+            .sort((a, b) => a[1].order - b[1].order);
+          if (list.length === 0) return;
+          html += `<div class="tier-banner">${g.label}</div>`;
+          list.forEach(([name, s]) => { html += renderRow(name, s); });
+        });
+      } else {
+        // DP 많은 순 — Tier 그룹 헤더 숨김
+        entries
+          .sort((a, b) => b[1].total_dp - a[1].total_dp)
+          .forEach(([name, s]) => { html += renderRow(name, s); });
+      }
+
+      // 제너럴리스트 — 항상 마지막
+      html += `<div class="tier-banner is-generalist">GENERALIST</div>`;
+      html += renderRow('제너럴리스트', DATA.generalist, { isGeneralist: true });
+
+      root.innerHTML = html;
+
+      // DP 막대 채우기 애니메이션
+      requestAnimationFrame(() => {
+        root.querySelectorAll('.dp-bar-fill').forEach(el => {
+          el.style.width = el.dataset.target + '%';
+        });
+      });
+    }
+
+    function setSort(mode) {
+      if (mode === sortMode) return;
+      sortMode = mode;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        const active = btn.dataset.sort === mode;
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+
+      const root = document.getElementById('matrix');
+      root.classList.add('is-fading');
+      setTimeout(() => {
+        renderMatrix();
+        requestAnimationFrame(() => root.classList.remove('is-fading'));
+      }, 200);
+    }
+
+    function bindFilterBar() {
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => setSort(btn.dataset.sort));
+      });
+    }
+
+    /* =========================================================
+       SECTOR DRY POWDER DISTRIBUTION 렌더
+       ========================================================= */
+    function renderDistCard(name, sector, opts = {}) {
+      const isGeneralist = !!opts.isGeneralist;
+      const tierKey   = isGeneralist ? 'Generalist' : sector.tier;
+      const tierLabel = isGeneralist ? 'Generalist' : sector.tier;
+
+      const emptyStages = ['R', 'G', 'B'].filter(s => sector[s].firm_count === 0);
+      const isFullEmpty = !isGeneralist && emptyStages.length === 3;
+      const isPartialEmpty = !isFullEmpty && emptyStages.length > 0;
+
+      const cardCls = ['dist-card'];
+      if (isGeneralist) cardCls.push('is-generalist');
+
+      const totalCls = sector.total_dp > 0 ? '' : ' is-zero';
+      const totalDisplay = sector.total_dp > 0 ? fmtDp(sector.total_dp) : '0';
+
+      const stagesHtml = ['R', 'G', 'B'].map(s => {
+        const d = sector[s];
+        const pct = Math.min((d.dp / DP_MAX) * 100, 100);
+        const hasDp = d.dp > 0;
+        const amountText = hasDp
+          ? `${fmtDp(d.dp)}<span class="unit">억</span>`
+          : '—';
+        return `
+          <div class="dist-stage ${s.toLowerCase()}">
+            <span class="stage-key">${s}</span>
+            <div class="bar-track">
+              <div class="bar-fill" data-target="${pct.toFixed(1)}"></div>
+            </div>
+            <span class="amount${hasDp ? '' : ' is-zero'}">${amountText}</span>
+          </div>
+        `;
+      }).join('');
+
+      let alertHtml = '';
+      if (emptyStages.length > 0) {
+        alertHtml = `
+          <div class="dist-alert partial">
+            <span class="icon" aria-hidden="true">⚠</span>
+            <span>${emptyStages.join(', ')} 단계 출자 없음</span>
+          </div>
+        `;
+      }
+
+      return `
+        <article class="${cardCls.join(' ')}">
+          <div class="dist-card-header">
+            <div class="header-left">
+              <div class="badges">
+                <span class="dist-badge ${TIER_CLS[tierKey]}">${tierLabel}</span>
+              </div>
+              <div class="name">${escapeHtml(name)}</div>
+            </div>
+            <div class="total${totalCls}">${totalDisplay}<span class="unit">억</span></div>
+          </div>
+          <div class="dist-stages">${stagesHtml}</div>
+          ${alertHtml}
+        </article>
+      `;
+    }
+
+    function renderDistribution() {
+      const root = document.getElementById('dist-grid');
+      let html = '';
+
+      Object.entries(DATA.sectors)
+        .sort((a, b) => a[1].order - b[1].order)
+        .forEach(([name, s]) => { html += renderDistCard(name, s); });
+
+      html += renderDistCard('제너럴리스트', DATA.generalist, { isGeneralist: true });
+
+      root.innerHTML = html;
+
+      requestAnimationFrame(() => {
+        root.querySelectorAll('.bar-fill').forEach(el => {
+          el.style.width = el.dataset.target + '%';
+        });
+      });
+    }
+
+    /* =========================================================
+       커스텀 툴팁 (즉시 표시)
+       ========================================================= */
+    const tipEl = () => document.getElementById('chip-tooltip');
+
+    function showTip(target) {
+      const text = target.dataset.tip;
+      if (!text) return;
+      const el = tipEl();
+      el.textContent = text;
+      // 위치 측정을 위해 일단 표시
+      el.style.visibility = 'hidden';
+      el.classList.add('is-visible');
+      const rect = target.getBoundingClientRect();
+      const tipRect = el.getBoundingClientRect();
+      const pad = 8;
+      let top = rect.top - tipRect.height - 8;
+      let left = rect.left + rect.width / 2 - tipRect.width / 2;
+      // 화면 위로 잘리면 칩 아래로
+      if (top < pad) top = rect.bottom + 8;
+      // 좌우 클램프
+      left = Math.max(pad, Math.min(window.innerWidth - tipRect.width - pad, left));
+      el.style.top = `${top}px`;
+      el.style.left = `${left}px`;
+      el.style.visibility = '';
+      el.setAttribute('aria-hidden', 'false');
+    }
+
+    function hideTip() {
+      const el = tipEl();
+      el.classList.remove('is-visible');
+      el.setAttribute('aria-hidden', 'true');
+    }
+
+    function bindChipTooltip() {
+      const matrix = document.getElementById('matrix');
+      matrix.addEventListener('mouseover', (e) => {
+        const chip = e.target.closest('.firm-chip[data-tip]');
+        if (chip) showTip(chip);
+      });
+      matrix.addEventListener('mouseout', (e) => {
+        const chip = e.target.closest('.firm-chip[data-tip]');
+        if (chip) hideTip();
+      });
+      matrix.addEventListener('focusin', (e) => {
+        const chip = e.target.closest('.firm-chip[data-tip]');
+        if (chip) showTip(chip);
+      });
+      matrix.addEventListener('focusout', hideTip);
+      window.addEventListener('scroll', hideTip, { passive: true });
+      window.addEventListener('resize', hideTip);
+    }
+
+    /* =========================================================
+       PDF / PPTX 추출
+       ========================================================= */
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        if (document.querySelector(`script[data-src="${src}"]`)) { resolve(); return; }
+        const s = document.createElement('script');
+        s.src = src;
+        s.dataset.src = src;
+        s.async = true;
+        s.onload  = () => resolve();
+        s.onerror = () => reject(new Error('스크립트 로드 실패: ' + src));
+        document.head.appendChild(s);
+      });
+    }
+
+    function setBtnLoading(btn, isLoading, loadingText) {
+      const span = btn.querySelector('span');
+      if (isLoading) {
+        btn.dataset.original = span.textContent;
+        span.textContent = loadingText;
+        btn.disabled = true;
+      } else {
+        if (btn.dataset.original) span.textContent = btn.dataset.original;
+        btn.disabled = false;
+      }
+    }
+
+    function exportPdf() {
+      // 브라우저 인쇄 다이얼로그 — '대상: PDF로 저장' 선택
+      // (이미 @media print 스타일이 잡혀있어 깔끔하게 출력됨)
+      window.print();
+    }
+
+    async function exportPptx() {
+      const btn = document.getElementById('btn-pptx');
+      setBtnLoading(btn, true, '슬라이드 생성 중…');
+
+      // 캡처에서 제외할 요소들 임시 숨김
+      const hideSelectors = ['#actions-bar', '#chip-tooltip'];
+      const hidden = [];
+      hideSelectors.forEach(sel => {
+        const el = document.querySelector(sel);
+        if (el) { hidden.push([el, el.style.visibility]); el.style.visibility = 'hidden'; }
+      });
+
+      try {
+        // CDN 라이브러리 lazy-load (npm 기반 — gh tag보다 안정적)
+        await loadScript('https://cdn.jsdelivr.net/npm/[email protected]/dist/html2canvas.min.js');
+
+        // PptxGenJS — npm CDN, 실패 시 unpkg로 fallback
+        try {
+          await loadScript('https://cdn.jsdelivr.net/npm/[email protected]/dist/pptxgen.bundle.js');
+        } catch (_) {
+          await loadScript('https://unpkg.com/[email protected]/dist/pptxgen.bundle.js');
+        }
+
+        // 글로벌 이름 — 빌드/버전에 따라 PptxGenJS / pptxgen / 디폴트 export 위치가 다름
+        const PptxCtor =
+          window.PptxGenJS ||
+          window.pptxgen   ||
+          window.pptxgenjs ||
+          (window.PptxGenJS && window.PptxGenJS.default);
+        if (typeof PptxCtor !== 'function') {
+          throw new Error('PptxGenJS 생성자를 찾지 못했어요. 네트워크/광고차단 확인 필요.');
+        }
+
+        // 매트릭스 가로 스크롤 방지 — 캡처 시 전체 폭으로
+        const matrixWrap = document.querySelector('.matrix-wrap');
+        const prevOverflow = matrixWrap ? matrixWrap.style.overflow : '';
+        if (matrixWrap) matrixWrap.style.overflow = 'visible';
+
+        // 메인 컨텐츠 캡처
+        const target = document.querySelector('main') || document.body;
+        const canvas = await window.html2canvas(target, {
+          scale: 2,
+          backgroundColor: '#FAFAF9',
+          useCORS: true,
+          logging: false,
+          windowWidth: Math.max(document.documentElement.scrollWidth, 1280),
+          windowHeight: target.scrollHeight,
+          ignoreElements: (el) => el.id === 'actions-bar' || el.id === 'chip-tooltip'
+        });
+
+        if (matrixWrap) matrixWrap.style.overflow = prevOverflow;
+
+        const dataUrl = canvas.toDataURL('image/png');
+
+        // PPT 슬라이드 — 캡처 비율에 맞는 커스텀 사이즈
+        const widthIn = 13.33; // 16:9 wide 폭 기준
+        const heightIn = (widthIn * canvas.height) / canvas.width;
+
+        const pptx = new PptxCtor();
+        pptx.defineLayout({ name: 'DCAMP_LONG', width: widthIn, height: heightIn });
+        pptx.layout = 'DCAMP_LONG';
+        pptx.title  = 'dcamp Sector × RGB Map';
+        pptx.author = 'dcamp';
+
+        const slide = pptx.addSlide();
+        slide.background = { color: 'FAFAF9' };
+        slide.addImage({ data: dataUrl, x: 0, y: 0, w: widthIn, h: heightIn });
+
+        const dateStr = (DATA.meta.as_of || '').replace(/-/g, '');
+        await pptx.writeFile({ fileName: `dcamp_drypowder_map_${dateStr}.pptx` });
+      } catch (err) {
+        console.error('PPTX 생성 오류:', err);
+        alert('PPTX 생성에 실패했어요.\n\n' + (err && err.message ? err.message : '네트워크 또는 브라우저 호환성 문제일 수 있어요.'));
+      } finally {
+        hidden.forEach(([el, prev]) => { el.style.visibility = prev; });
+        setBtnLoading(btn, false);
+      }
+    }
+
+    function bindActionsBar() {
+      const pdfBtn  = document.getElementById('btn-pdf');
+      const pptxBtn = document.getElementById('btn-pptx');
+      if (pdfBtn)  pdfBtn.addEventListener('click', exportPdf);
+      if (pptxBtn) pptxBtn.addEventListener('click', exportPptx);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderHeaderMeta();
+      renderKpiRow();
+      renderMatrix();
+      renderDistribution();
+      bindFilterBar();
+      bindChipTooltip();
+      bindActionsBar();
+    });
+  </script>
+</body>
+</html>
